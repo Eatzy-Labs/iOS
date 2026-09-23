@@ -10,14 +10,21 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         VStack {
-            Image(.typeCafeteria)
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-                .applyEatzyFont(.title_18_sb)
-                .foregroundStyle(.blue500)
+            EatzyNavigationBar(
+                leading: .title("TITLE"),
+                trailing: [
+                    .icon(.icBell, accessibilityLabel: "알림") {
+                        print("알림 선택")
+                    },
+                    .icon(.icSetting, accessibilityLabel: "설정") {
+                        print("설정 선택")
+                    }
+                ]
+            )
+
+            Spacer()
         }
-        .padding()
+        .background(.gray100)
     }
 }
 
