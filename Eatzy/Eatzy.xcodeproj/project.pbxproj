@@ -10,9 +10,35 @@
 		A494E5CE306410C700C4C3C5 /* Eatzy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Eatzy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A4EA720F0000000000000001 /* Exceptions for "Eatzy" folder in "Eatzy" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				App/.gitkeep,
+				Clients/LocationClient/.gitkeep,
+				Clients/MapClient/.gitkeep,
+				Clients/Network/API/.gitkeep,
+				Clients/Network/DTO/.gitkeep,
+				Clients/Network/Plugin/.gitkeep,
+				DesignSystem/Components/.gitkeep,
+				DesignSystem/Modifiers/.gitkeep,
+				DesignSystem/Tokens/.gitkeep,
+				Features/Map/.gitkeep,
+				"Resources/Preview Content/.gitkeep",
+				Shared/Extensions/.gitkeep,
+				Shared/Models/.gitkeep,
+				Shared/Utilities/.gitkeep,
+			);
+			target = A494E5CD306410C700C4C3C5 /* Eatzy */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A494E5D0306410C700C4C3C5 /* Eatzy */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A4EA720F0000000000000001 /* Exceptions for "Eatzy" folder in "Eatzy" target */,
+			);
 			path = Eatzy;
 			sourceTree = "<group>";
 		};
