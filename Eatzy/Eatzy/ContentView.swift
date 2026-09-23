@@ -8,8 +8,20 @@
 import SwiftUI
 
 struct ContentView: View {
+    private let tabs = [
+        "114(Cheomseong)",
+        "305(Welfare)",
+        "116(Info)",
+        "408(Engineer)",
+        "109(FastFood)",
+        "103(GP)"
+    ]
+
+    @State private var selectedDate = Calendar.current.startOfDay(for: .now)
+    @State private var selectedTab = "114(Cheomseong)"
+
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             EatzyNavigationBar(
                 leading: .title("TITLE"),
                 trailing: [
@@ -22,8 +34,17 @@ struct ContentView: View {
                 ]
             )
 
-            Spacer()
+            EatzyCallendar(selection: $selectedDate)
+                .fixedSize(horizontal: false, vertical: true)
+
+            EatzyTabBar(
+                items: tabs,
+                selection: $selectedTab,
+                title: { $0 }
+            )
+            .fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.gray100)
     }
 }
