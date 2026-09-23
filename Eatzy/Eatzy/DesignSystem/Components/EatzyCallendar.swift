@@ -48,7 +48,6 @@ struct EatzyCallendar: View {
             }
             .onChange(of: selection) { _, newSelection in
                 withAnimation(.easeInOut(duration: 0.2)) {
-                    // ScrollView가 허용하는 최소·최대 offset 안에서만 중앙 정렬됩니다.
                     proxy.scrollTo(calendar.startOfDay(for: newSelection), anchor: .center)
                 }
             }
