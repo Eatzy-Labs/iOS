@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "ic-cafeteria.svg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
