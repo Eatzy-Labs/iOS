@@ -8,16 +8,44 @@
 import SwiftUI
 
 struct ContentView: View {
+    private let tabs = [
+        "114(Cheomseong)",
+        "305(Welfare)",
+        "116(Info)",
+        "408(Engineer)",
+        "109(FastFood)",
+        "103(GP)"
+    ]
+
+    @State private var selectedDate = Calendar.current.startOfDay(for: .now)
+    @State private var selectedTab = "114(Cheomseong)"
+
     var body: some View {
-        VStack {
-            Image(.typeCafeteria)
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-                .applyEatzyFont(.title_18_sb)
-                .foregroundStyle(.blue500)
+        VStack(spacing: 0) {
+            EatzyNavigationBar(
+                leading: .title("TITLE"),
+                trailing: [
+                    .icon(.icBell, accessibilityLabel: "알림") {
+                        print("알림 선택")
+                    },
+                    .icon(.icSetting, accessibilityLabel: "설정") {
+                        print("설정 선택")
+                    }
+                ]
+            )
+
+            EatzyCallendar(selection: $selectedDate)
+                .fixedSize(horizontal: false, vertical: true)
+
+            EatzyTabBar(
+                items: tabs,
+                selection: $selectedTab,
+                title: { $0 }
+            )
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(.gray100)
     }
 }
 

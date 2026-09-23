@@ -20,7 +20,6 @@
 				Clients/Network/API/.gitkeep,
 				Clients/Network/DTO/.gitkeep,
 				Clients/Network/Plugin/.gitkeep,
-				DesignSystem/Components/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Tokens/.gitkeep,
 				Features/Map/.gitkeep,
