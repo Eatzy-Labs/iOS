@@ -36,6 +36,7 @@ struct MainTabFeature: Reducer {
         var mapPlaces = MapMockData.places
         var selectedMapCategory: MapPlace.Category = .all
         var isMapVisible = false
+        var isSettingPresented = false
 
         var isMenuAvailable: Bool {
             let selectedDay = Calendar.current.startOfDay(for: selectedDate)
@@ -61,6 +62,7 @@ struct MainTabFeature: Reducer {
         case lunchSectionSelected(String?)
         case dinnerSectionSelected(String?)
         case settingButtonTapped
+        case settingBackButtonTapped
         case mapViewAppeared
         case mapUniversityTapped
         case mapSettingButtonTapped
@@ -97,14 +99,19 @@ struct MainTabFeature: Reducer {
                 state.selectedDinnerSectionID = sectionID
                 return .none
 
-            case .settingButtonTapped:
+            case .settingButtonTapped, .mapSettingButtonTapped:
+                state.isSettingPresented = true
+                return .none
+
+            case .settingBackButtonTapped:
+                state.isSettingPresented = false
                 return .none
 
             case .mapViewAppeared:
                 state.isMapVisible = true
                 return .none
 
-            case .mapUniversityTapped, .mapSettingButtonTapped:
+            case .mapUniversityTapped:
                 return .none
 
             case let .mapCategorySelected(category):
