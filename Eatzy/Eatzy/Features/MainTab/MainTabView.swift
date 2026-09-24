@@ -23,7 +23,7 @@ struct MainTabView: View {
             }
 
             Tab("Map", systemImage: "map.fill", value: MainTabFeature.State.Tab.map) {
-                MapView()
+                MapView(store: store)
             }
         }
         .tint(.purple500)
