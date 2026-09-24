@@ -10,7 +10,7 @@ struct EatzyCTAButton: View {
         case active
         case inactive
 
-        fileprivate var backgroundColor: Color {
+        var backgroundColor: Color {
             switch self {
             case .active:
                 return .orange500
@@ -19,7 +19,7 @@ struct EatzyCTAButton: View {
             }
         }
 
-        fileprivate var isEnabled: Bool {
+        var isEnabled: Bool {
             self == .active
         }
     }
@@ -50,6 +50,6 @@ struct EatzyCTAButton: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-        .disabled(!state.isEnabled)
+        .allowsHitTesting(state.isEnabled)
     }
 }
