@@ -33,7 +33,8 @@ struct LoginView: View {
                         ),
                         placeholder: "Email",
                         maximumLength: 64,
-                        showsCounter: false
+                        showsCounter: false,
+                        keyboardType: .emailAddress
                     )
 
                     EatzyTextfield(
