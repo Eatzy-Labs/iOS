@@ -37,7 +37,11 @@ struct MainTabFeature: Reducer {
         var selectedMapCategory: MapPlace.Category = .all
         var isMapVisible = false
         var isSettingPresented = false
-        var isAuthenticated = true
+        var setting: SettingFeature.State
+
+        init(isAuthenticated: Bool = true) {
+            setting = SettingFeature.State(isAuthenticated: isAuthenticated)
+        }
 
         var isMenuAvailable: Bool {
             let selectedDay = Calendar.current.startOfDay(for: selectedDate)
@@ -55,6 +59,7 @@ struct MainTabFeature: Reducer {
         }
     }
 
+    @CasePathable
     enum Action {
         case tabSelected(State.Tab)
         case dateSelected(Date)
@@ -63,8 +68,7 @@ struct MainTabFeature: Reducer {
         case lunchSectionSelected(String?)
         case dinnerSectionSelected(String?)
         case settingButtonTapped
-        case settingBackButtonTapped
-        case settingLoginButtonTapped
+        case setting(SettingFeature.Action)
         case mapViewAppeared
         case mapUniversityTapped
         case mapSettingButtonTapped
@@ -77,6 +81,10 @@ struct MainTabFeature: Reducer {
     }
 
     var body: some Reducer<State, Action> {
+        Scope(state: \.setting, action: \.setting) {
+            SettingFeature()
+        }
+
         Reduce { state, action in
             switch action {
             case let .tabSelected(tab):
@@ -110,12 +118,15 @@ struct MainTabFeature: Reducer {
                 state.isSettingPresented = true
                 return .none
 
-            case .settingBackButtonTapped:
+            case .setting(.delegate(.backRequested)):
                 state.isSettingPresented = false
                 return .none
 
-            case .settingLoginButtonTapped:
+            case .setting(.delegate(.loginRequired)):
                 return .send(.delegate(.loginRequired))
+
+            case .setting:
+                return .none
 
             case .mapViewAppeared:
                 state.isMapVisible = true

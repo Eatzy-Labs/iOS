@@ -14,9 +14,7 @@ struct MainTabView: View {
     var body: some View {
         if store.isSettingPresented {
             SettingView(
-                isAuthenticated: store.isAuthenticated,
-                onBackTapped: { store.send(.settingBackButtonTapped) },
-                onLoginTapped: { store.send(.settingLoginButtonTapped) }
+                store: store.scope(state: \.setting, action: \.setting)
             )
         } else {
             TabView(
