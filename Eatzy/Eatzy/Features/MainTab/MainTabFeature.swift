@@ -25,6 +25,14 @@ struct MainTabFeature: Reducer {
             case map
         }
 
+        enum MapCategory: CaseIterable, Hashable {
+            case all
+            case cafeteria
+            case cafe
+            case store
+            case office
+        }
+
         var selectedTab: Tab = .menu
         var selectedDate = Calendar.current.startOfDay(for: .now)
         var selectedCafeteria = MainTabFeature.cafeterias.first ?? ""
@@ -33,6 +41,7 @@ struct MainTabFeature: Reducer {
         var selectedLunchSectionID: String?
         var selectedDinnerSectionID: String?
         var selectedUniversity = "Kyungpook Univ"
+        var selectedMapCategory: MapCategory = .all
         var isMapVisible = false
 
         var isMenuAvailable: Bool {
@@ -54,6 +63,7 @@ struct MainTabFeature: Reducer {
         case mapViewAppeared
         case mapUniversityTapped
         case mapSettingButtonTapped
+        case mapCategorySelected(State.MapCategory)
     }
 
     var body: some Reducer<State, Action> {
@@ -94,6 +104,10 @@ struct MainTabFeature: Reducer {
                 return .none
 
             case .mapUniversityTapped, .mapSettingButtonTapped:
+                return .none
+
+            case let .mapCategorySelected(category):
+                state.selectedMapCategory = category
                 return .none
             }
         }
