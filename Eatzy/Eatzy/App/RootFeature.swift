@@ -14,11 +14,13 @@ struct RootFeature: Reducer {
             case splash
             case login
             case onboarding
+            case signUp
         }
 
         var route: Route = .splash
         var login = LoginFeature.State()
         var onboarding = OnboardingFeature.State()
+        var signUp = SignUpFeature.State()
     }
 
     @CasePathable
@@ -27,6 +29,7 @@ struct RootFeature: Reducer {
         case splashFinished
         case login(LoginFeature.Action)
         case onboarding(OnboardingFeature.Action)
+        case signUp(SignUpFeature.Action)
     }
 
     @Dependency(\.continuousClock) private var clock
@@ -42,6 +45,10 @@ struct RootFeature: Reducer {
 
         Scope(state: \.onboarding, action: \.onboarding) {
             OnboardingFeature()
+        }
+
+        Scope(state: \.signUp, action: \.signUp) {
+            SignUpFeature()
         }
 
         Reduce { state, action in
@@ -75,9 +82,24 @@ struct RootFeature: Reducer {
                 return .none
 
             case .onboarding(.delegate(.onboardingCompleted)):
+                guard state.onboarding.entryPoint == .signUp else {
+                    return .none
+                }
+                state.signUp = SignUpFeature.State()
+                state.route = .signUp
+                return .none
+
+            case .signUp(.delegate(.backToOnboarding)):
+                state.route = .onboarding
                 return .none
 
             case .onboarding:
+                return .none
+
+            case .signUp(.delegate(.signUpCompleted)):
+                return .none
+
+            case .signUp:
                 return .none
             }
         }

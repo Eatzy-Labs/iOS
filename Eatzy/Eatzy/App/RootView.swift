@@ -28,6 +28,11 @@ struct RootView: View {
             OnboardingView(
                 store: store.scope(state: \.onboarding, action: \.onboarding)
             )
+
+        case .signUp:
+            SignUpView(
+                store: store.scope(state: \.signUp, action: \.signUp)
+            )
         }
     }
 }
