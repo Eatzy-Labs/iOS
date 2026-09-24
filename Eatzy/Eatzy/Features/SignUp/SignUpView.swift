@@ -2,6 +2,8 @@
 //  SignUpView.swift
 //  Eatzy
 //
+//  Created by sun on 9/24/26.
+//
 
 import ComposableArchitecture
 import SwiftUI
