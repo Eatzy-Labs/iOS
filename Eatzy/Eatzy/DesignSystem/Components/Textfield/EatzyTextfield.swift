@@ -18,6 +18,8 @@ struct EatzyTextfield: View {
     private let maximumLength: Int
     private let isSecure: Bool
     private let showsCounter: Bool
+    private let showsErrorIcon: Bool
+    private let keyboardType: UIKeyboardType
 
     @Binding private var text: String
     @Binding private var state: State
@@ -28,7 +30,9 @@ struct EatzyTextfield: View {
         placeholder: String,
         maximumLength: Int = 8,
         isSecure: Bool = false,
-        showsCounter: Bool = true
+        showsCounter: Bool = true,
+        showsErrorIcon: Bool = true,
+        keyboardType: UIKeyboardType = .default
     ) {
         self._text = text
         self._state = state
@@ -36,10 +40,12 @@ struct EatzyTextfield: View {
         self.maximumLength = max(0, maximumLength)
         self.isSecure = isSecure
         self.showsCounter = showsCounter
+        self.showsErrorIcon = showsErrorIcon
+        self.keyboardType = keyboardType
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: errorMessage == nil ? 8 : 4) {
             inputField
 
             if showsCounter || errorMessage != nil {
@@ -108,6 +114,9 @@ private extension EatzyTextfield {
                 .textContentType(.password)
         } else {
             TextField("", text: $text)
+                .keyboardType(keyboardType)
+                .textInputAutocapitalization(keyboardType == .emailAddress ? .never : .sentences)
+                .autocorrectionDisabled(keyboardType == .emailAddress)
         }
     }
 
@@ -122,17 +131,19 @@ private extension EatzyTextfield {
                 .frame(width: 24, height: 24)
 
         case .error:
-            Button {
-                text = ""
-                state = .placeholder
-            } label: {
-                Image(.icDelete)
-                    .renderingMode(.template)
-                    .foregroundStyle(.red500)
-                    .frame(width: 24, height: 24)
+            if showsErrorIcon {
+                Button {
+                    text = ""
+                    state = .placeholder
+                } label: {
+                    Image(.icDelete)
+                        .renderingMode(.template)
+                        .foregroundStyle(.red500)
+                        .frame(width: 24, height: 24)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("입력 내용 삭제")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("입력 내용 삭제")
         }
     }
 
@@ -145,7 +156,7 @@ private extension EatzyTextfield {
         guard newValue != oldValue else { return }
         if newValue.isEmpty {
             state = .placeholder
-        } else if state != .filled {
+        } else if state == .placeholder || state == .writing {
             state = .writing
         }
     }
