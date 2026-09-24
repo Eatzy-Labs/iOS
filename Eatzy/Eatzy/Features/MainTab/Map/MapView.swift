@@ -24,12 +24,12 @@ struct MapView: View {
             )
 
             ZStack(alignment: .top) {
-                NaverMapView()
+                NaverMapView(places: store.visibleMapPlaces)
                     .ignoresSafeArea(edges: .bottom)
 
                 ScrollView(.horizontal) {
                     LazyHStack(spacing: 8) {
-                        ForEach(MainTabFeature.State.MapCategory.allCases, id: \.self) { category in
+                        ForEach(MapPlace.Category.allCases, id: \.self) { category in
                             categoryChip(category)
                         }
                     }
@@ -48,7 +48,7 @@ struct MapView: View {
 }
 
 private extension MapView {
-    func categoryChip(_ category: MainTabFeature.State.MapCategory) -> some View {
+    func categoryChip(_ category: MapPlace.Category) -> some View {
         EatzyChipButton(
             category.title,
             icon: category.icon,
@@ -59,7 +59,7 @@ private extension MapView {
     }
 }
 
-private extension MainTabFeature.State.MapCategory {
+private extension MapPlace.Category {
     var title: String {
         switch self {
         case .all: return "All"
@@ -82,6 +82,12 @@ private extension MainTabFeature.State.MapCategory {
 }
 
 private struct NaverMapView: UIViewRepresentable {
+    let places: [MapPlace]
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
     func makeUIView(context: Context) -> NMFMapView {
         let mapView = NMFMapView(frame: .zero)
         let kyungpookUniversity = NMGLatLng(lat: 35.8888, lng: 128.6103)
@@ -89,9 +95,47 @@ private struct NaverMapView: UIViewRepresentable {
         mapView.moveCamera(
             NMFCameraUpdate(scrollTo: kyungpookUniversity, zoomTo: 15)
         )
+        context.coordinator.updateMarkers(for: places, on: mapView)
 
         return mapView
     }
 
-    func updateUIView(_ uiView: NMFMapView, context: Context) {}
+    func updateUIView(_ uiView: NMFMapView, context: Context) {
+        context.coordinator.updateMarkers(for: places, on: uiView)
+    }
+
+    final class Coordinator {
+        private var markers: [NMFMarker] = []
+
+        func updateMarkers(for places: [MapPlace], on mapView: NMFMapView) {
+            markers.forEach { $0.mapView = nil }
+            markers = places.map { place in
+                let marker = NMFMarker()
+                marker.position = NMGLatLng(
+                    lat: place.latitude,
+                    lng: place.longitude
+                )
+                marker.iconImage = NMFOverlayImage(image: place.category.markerImage)
+                marker.mapView = mapView
+                return marker
+            }
+        }
+    }
+}
+
+private extension MapPlace.Category {
+    var markerImage: UIImage {
+        switch self {
+        case .all:
+            return UIImage(resource: .typeStore)
+        case .cafeteria:
+            return UIImage(resource: .typeCafeteria)
+        case .cafe:
+            return UIImage(resource: .typeCafe)
+        case .office:
+            return UIImage(resource: .typeOffice)
+        case .store:
+            return UIImage(resource: .typeStore)
+        }
+    }
 }

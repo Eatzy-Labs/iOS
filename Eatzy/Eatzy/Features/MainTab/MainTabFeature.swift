@@ -25,14 +25,6 @@ struct MainTabFeature: Reducer {
             case map
         }
 
-        enum MapCategory: CaseIterable, Hashable {
-            case all
-            case cafeteria
-            case cafe
-            case store
-            case office
-        }
-
         var selectedTab: Tab = .menu
         var selectedDate = Calendar.current.startOfDay(for: .now)
         var selectedCafeteria = MainTabFeature.cafeterias.first ?? ""
@@ -41,7 +33,8 @@ struct MainTabFeature: Reducer {
         var selectedLunchSectionID: String?
         var selectedDinnerSectionID: String?
         var selectedUniversity = "Kyungpook Univ"
-        var selectedMapCategory: MapCategory = .all
+        var mapPlaces = MapMockData.places
+        var selectedMapCategory: MapPlace.Category = .all
         var isMapVisible = false
 
         var isMenuAvailable: Bool {
@@ -49,6 +42,14 @@ struct MainTabFeature: Reducer {
 
             return availableMenuDates.contains(selectedDay)
                 && selectedCafeteria == MainTabFeature.cafeterias.first
+        }
+
+        var visibleMapPlaces: [MapPlace] {
+            guard selectedMapCategory != .all else {
+                return mapPlaces
+            }
+
+            return mapPlaces.filter { $0.category == selectedMapCategory }
         }
     }
 
@@ -63,7 +64,7 @@ struct MainTabFeature: Reducer {
         case mapViewAppeared
         case mapUniversityTapped
         case mapSettingButtonTapped
-        case mapCategorySelected(State.MapCategory)
+        case mapCategorySelected(MapPlace.Category)
     }
 
     var body: some Reducer<State, Action> {
