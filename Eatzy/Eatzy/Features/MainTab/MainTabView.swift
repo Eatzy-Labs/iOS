@@ -26,6 +26,6 @@ struct MainTabView: View {
                 MapView(store: store)
             }
         }
-        .tint(.purple500)
+        .tint(.orange500)
     }
 }
