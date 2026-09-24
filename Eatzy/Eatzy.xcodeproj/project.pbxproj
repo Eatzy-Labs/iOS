@@ -8,10 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		A4C000000000000000000001 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = A4C000000000000000000003 /* ComposableArchitecture */; };
+		A4D000000000000000000001 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = A4D000000000000000000003 /* NMapsMap */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A494E5CE306410C700C4C3C5 /* Eatzy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Eatzy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A4E000000000000000000001 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -26,6 +28,7 @@
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Tokens/.gitkeep,
 				Features/Map/.gitkeep,
+				Info.plist,
 				"Resources/Preview Content/.gitkeep",
 				Shared/Extensions/.gitkeep,
 				Shared/Models/.gitkeep,
@@ -52,6 +55,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A4C000000000000000000001 /* ComposableArchitecture in Frameworks */,
+				A4D000000000000000000001 /* NMapsMap in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,6 +65,7 @@
 		A494E5C5306410C700C4C3C5 = {
 			isa = PBXGroup;
 			children = (
+				A4E000000000000000000001 /* Config.xcconfig */,
 				A494E5D0306410C700C4C3C5 /* Eatzy */,
 				A494E5CF306410C700C4C3C5 /* Products */,
 			);
@@ -95,6 +100,7 @@
 			name = Eatzy;
 			packageProductDependencies = (
 				A4C000000000000000000003 /* ComposableArchitecture */,
+				A4D000000000000000000003 /* NMapsMap */,
 			);
 			productName = Eatzy;
 			productReference = A494E5CE306410C700C4C3C5 /* Eatzy.app */;
@@ -126,6 +132,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A4C000000000000000000002 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+				A4D000000000000000000002 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A494E5CF306410C700C4C3C5 /* Products */;
@@ -281,6 +288,7 @@
 		};
 		A494E5DA306410C800C4C3C5 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A4E000000000000000000001 /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -288,7 +296,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6B47X24XTW;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Eatzy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Eatzy;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -319,6 +328,7 @@
 		};
 		A494E5DB306410C800C4C3C5 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A4E000000000000000000001 /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -326,7 +336,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6B47X24XTW;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Eatzy/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Eatzy;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -387,6 +398,14 @@
 				minimumVersion = 1.26.1;
 			};
 		};
+		A4D000000000000000000002 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/navermaps/SPM-NMapsMap.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.24.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -394,6 +413,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A4C000000000000000000002 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
 			productName = ComposableArchitecture;
+		};
+		A4D000000000000000000003 /* NMapsMap */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A4D000000000000000000002 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
+			productName = NMapsMap;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
