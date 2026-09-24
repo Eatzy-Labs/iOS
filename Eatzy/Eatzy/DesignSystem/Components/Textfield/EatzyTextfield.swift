@@ -6,15 +6,18 @@
 import SwiftUI
 
 struct EatzyTextfield: View {
-    enum State: Equatable {
+    nonisolated enum State: Equatable, Sendable {
         case placeholder
         case writing
+        case filled
         case success
         case error(message: String)
     }
 
     private let placeholder: String
     private let maximumLength: Int
+    private let isSecure: Bool
+    private let showsCounter: Bool
 
     @Binding private var text: String
     @Binding private var state: State
@@ -23,18 +26,25 @@ struct EatzyTextfield: View {
         text: Binding<String>,
         state: Binding<State>,
         placeholder: String,
-        maximumLength: Int = 8
+        maximumLength: Int = 8,
+        isSecure: Bool = false,
+        showsCounter: Bool = true
     ) {
         self._text = text
         self._state = state
         self.placeholder = placeholder
         self.maximumLength = max(0, maximumLength)
+        self.isSecure = isSecure
+        self.showsCounter = showsCounter
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             inputField
-            caption
+
+            if showsCounter || errorMessage != nil {
+                caption
+            }
         }
         .onChange(of: text) { oldValue, newValue in
             handleTextChange(from: oldValue, to: newValue)
@@ -53,7 +63,7 @@ private extension EatzyTextfield {
                         .allowsHitTesting(false)
                 }
 
-                TextField("", text: $text)
+                inputControl
                     .applyEatzyFont(.body_16_m)
                     .foregroundStyle(.gray900)
             }
@@ -81,7 +91,9 @@ private extension EatzyTextfield {
 
             Spacer(minLength: 0)
 
-            Text("\(text.count)/\(maximumLength)")
+            if showsCounter {
+                Text("\(text.count)/\(maximumLength)")
+            }
         }
         .applyEatzyFont(.caption_12_m)
         .foregroundStyle(captionColor)
@@ -90,9 +102,19 @@ private extension EatzyTextfield {
     }
 
     @ViewBuilder
+    var inputControl: some View {
+        if isSecure {
+            SecureField("", text: $text)
+                .textContentType(.password)
+        } else {
+            TextField("", text: $text)
+        }
+    }
+
+    @ViewBuilder
     var statusIcon: some View {
         switch state {
-        case .placeholder, .writing:
+        case .placeholder, .writing, .filled:
             EmptyView()
 
         case .success:
@@ -121,14 +143,18 @@ private extension EatzyTextfield {
         }
 
         guard newValue != oldValue else { return }
-        state = newValue.isEmpty ? .placeholder : .writing
+        if newValue.isEmpty {
+            state = .placeholder
+        } else if state != .filled {
+            state = .writing
+        }
     }
 
     var borderColor: Color {
         switch state {
         case .placeholder, .writing:
             return .gray300
-        case .success:
+        case .filled, .success:
             return .orange500
         case .error:
             return .red500
@@ -139,10 +165,15 @@ private extension EatzyTextfield {
         switch state {
         case .placeholder, .writing:
             return .gray500
-        case .success:
+        case .filled, .success:
             return .orange500
         case .error:
             return .red500
         }
+    }
+
+    var errorMessage: String? {
+        guard case let .error(message) = state else { return nil }
+        return message
     }
 }
