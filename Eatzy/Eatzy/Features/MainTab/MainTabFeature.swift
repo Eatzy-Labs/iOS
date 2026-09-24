@@ -32,11 +32,8 @@ struct MainTabFeature: Reducer {
         var selectedBreakfastSectionID: String?
         var selectedLunchSectionID: String?
         var selectedDinnerSectionID: String?
-        var selectedUniversity = "Kyungpook Univ"
-        var mapPlaces = MapMockData.places
-        var selectedMapCategory: MapPlace.Category = .all
-        var isMapVisible = false
         var isSettingPresented = false
+        var map = MapFeature.State()
         var setting: SettingFeature.State
 
         init(isAuthenticated: Bool = true) {
@@ -50,13 +47,6 @@ struct MainTabFeature: Reducer {
                 && selectedCafeteria == MainTabFeature.cafeterias.first
         }
 
-        var visibleMapPlaces: [MapPlace] {
-            guard selectedMapCategory != .all else {
-                return mapPlaces
-            }
-
-            return mapPlaces.filter { $0.category == selectedMapCategory }
-        }
     }
 
     @CasePathable
@@ -68,11 +58,8 @@ struct MainTabFeature: Reducer {
         case lunchSectionSelected(String?)
         case dinnerSectionSelected(String?)
         case settingButtonTapped
+        case map(MapFeature.Action)
         case setting(SettingFeature.Action)
-        case mapViewAppeared
-        case mapUniversityTapped
-        case mapSettingButtonTapped
-        case mapCategorySelected(MapPlace.Category)
         case delegate(Delegate)
 
         enum Delegate {
@@ -81,6 +68,10 @@ struct MainTabFeature: Reducer {
     }
 
     var body: some Reducer<State, Action> {
+        Scope(state: \.map, action: \.map) {
+            MapFeature()
+        }
+
         Scope(state: \.setting, action: \.setting) {
             SettingFeature()
         }
@@ -114,8 +105,11 @@ struct MainTabFeature: Reducer {
                 state.selectedDinnerSectionID = sectionID
                 return .none
 
-            case .settingButtonTapped, .mapSettingButtonTapped:
+            case .settingButtonTapped, .map(.delegate(.settingRequested)):
                 state.isSettingPresented = true
+                return .none
+
+            case .map:
                 return .none
 
             case .setting(.delegate(.backRequested)):
@@ -126,17 +120,6 @@ struct MainTabFeature: Reducer {
                 return .send(.delegate(.loginRequired))
 
             case .setting:
-                return .none
-
-            case .mapViewAppeared:
-                state.isMapVisible = true
-                return .none
-
-            case .mapUniversityTapped:
-                return .none
-
-            case let .mapCategorySelected(category):
-                state.selectedMapCategory = category
                 return .none
 
             case .delegate:

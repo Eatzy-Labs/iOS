@@ -28,7 +28,9 @@ struct MainTabView: View {
                 }
 
                 Tab("Map", systemImage: "map.fill", value: MainTabFeature.State.Tab.map) {
-                    MapView(store: store)
+                    MapView(
+                        store: store.scope(state: \.map, action: \.map)
+                    )
                 }
             }
             .tint(.orange500)
