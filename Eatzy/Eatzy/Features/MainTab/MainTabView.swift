@@ -13,9 +13,11 @@ struct MainTabView: View {
 
     var body: some View {
         if store.isSettingPresented {
-            SettingView {
-                store.send(.settingBackButtonTapped)
-            }
+            SettingView(
+                isAuthenticated: store.isAuthenticated,
+                onBackTapped: { store.send(.settingBackButtonTapped) },
+                onLoginTapped: { store.send(.settingLoginButtonTapped) }
+            )
         } else {
             TabView(
                 selection: Binding(

@@ -37,6 +37,7 @@ struct MainTabFeature: Reducer {
         var selectedMapCategory: MapPlace.Category = .all
         var isMapVisible = false
         var isSettingPresented = false
+        var isAuthenticated = true
 
         var isMenuAvailable: Bool {
             let selectedDay = Calendar.current.startOfDay(for: selectedDate)
@@ -63,10 +64,16 @@ struct MainTabFeature: Reducer {
         case dinnerSectionSelected(String?)
         case settingButtonTapped
         case settingBackButtonTapped
+        case settingLoginButtonTapped
         case mapViewAppeared
         case mapUniversityTapped
         case mapSettingButtonTapped
         case mapCategorySelected(MapPlace.Category)
+        case delegate(Delegate)
+
+        enum Delegate {
+            case loginRequired
+        }
     }
 
     var body: some Reducer<State, Action> {
@@ -107,6 +114,9 @@ struct MainTabFeature: Reducer {
                 state.isSettingPresented = false
                 return .none
 
+            case .settingLoginButtonTapped:
+                return .send(.delegate(.loginRequired))
+
             case .mapViewAppeared:
                 state.isMapVisible = true
                 return .none
@@ -116,6 +126,9 @@ struct MainTabFeature: Reducer {
 
             case let .mapCategorySelected(category):
                 state.selectedMapCategory = category
+                return .none
+
+            case .delegate:
                 return .none
             }
         }
