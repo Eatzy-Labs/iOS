@@ -9,6 +9,15 @@ import ComposableArchitecture
 import Foundation
 
 struct MainTabFeature: Reducer {
+    static let cafeterias = [
+        "114(Cheomseong)",
+        "305(Welfare)",
+        "116(Info)",
+        "408(Engineer)",
+        "109(FastFood)",
+        "103(GP)"
+    ]
+
     @ObservableState
     struct State: Equatable {
         enum Tab: Hashable {
@@ -18,10 +27,18 @@ struct MainTabFeature: Reducer {
 
         var selectedTab: Tab = .menu
         var selectedDate = Calendar.current.startOfDay(for: .now)
-        var selectedCafeteria = "114(Cheomseong)"
+        var selectedCafeteria = MainTabFeature.cafeterias.first ?? ""
+        var availableMenuDates: Set<Date> = [Calendar.current.startOfDay(for: .now)]
         var selectedBreakfastSectionID: String?
         var selectedLunchSectionID: String?
         var selectedDinnerSectionID: String?
+
+        var isMenuAvailable: Bool {
+            let selectedDay = Calendar.current.startOfDay(for: selectedDate)
+
+            return availableMenuDates.contains(selectedDay)
+                && selectedCafeteria == MainTabFeature.cafeterias.first
+        }
     }
 
     enum Action {
@@ -43,10 +60,13 @@ struct MainTabFeature: Reducer {
 
             case let .dateSelected(date):
                 state.selectedDate = date
+                state.selectedCafeteria = Self.cafeterias.first ?? ""
+                resetMenuSelections(&state)
                 return .none
 
             case let .cafeteriaSelected(cafeteria):
                 state.selectedCafeteria = cafeteria
+                resetMenuSelections(&state)
                 return .none
 
             case let .breakfastSectionSelected(sectionID):
@@ -65,5 +85,11 @@ struct MainTabFeature: Reducer {
                 return .none
             }
         }
+    }
+
+    private func resetMenuSelections(_ state: inout State) {
+        state.selectedBreakfastSectionID = nil
+        state.selectedLunchSectionID = nil
+        state.selectedDinnerSectionID = nil
     }
 }

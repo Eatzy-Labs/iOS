@@ -11,15 +11,6 @@ import SwiftUI
 struct MenuView: View {
     let store: StoreOf<MainTabFeature>
 
-    private let cafeterias = [
-        "114(Cheomseong)",
-        "305(Welfare)",
-        "116(Info)",
-        "408(Engineer)",
-        "109(FastFood)",
-        "103(GP)"
-    ]
-
     var body: some View {
         VStack(spacing: 0) {
             EatzyNavigationBar(
@@ -35,37 +26,39 @@ struct MenuView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             EatzyTabBar(
-                items: cafeterias,
+                items: MainTabFeature.cafeterias,
                 selection: selectedCafeteria,
                 title: { $0 }
             )
             .fixedSize(horizontal: false, vertical: true)
 
             ScrollView(.vertical) {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    mealSection(
-                        title: "BREAKFAST",
-                        color: .yellow500,
-                        sections: breakfastSections,
-                        selection: selectedBreakfastSectionID
-                    )
+                if store.isMenuAvailable {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        mealSection(
+                            title: "BREAKFAST",
+                            color: .yellow500,
+                            sections: breakfastSections,
+                            selection: selectedBreakfastSectionID
+                        )
 
-                    mealSection(
-                        title: "LUNCH",
-                        color: .blue500,
-                        sections: lunchSections,
-                        selection: selectedLunchSectionID
-                    )
+                        mealSection(
+                            title: "LUNCH",
+                            color: .blue500,
+                            sections: lunchSections,
+                            selection: selectedLunchSectionID
+                        )
 
-                    mealSection(
-                        title: "DINNER",
-                        color: .purple500,
-                        sections: dinnerSections,
-                        selection: selectedDinnerSectionID
-                    )
+                        mealSection(
+                            title: "DINNER",
+                            color: .purple500,
+                            sections: dinnerSections,
+                            selection: selectedDinnerSectionID
+                        )
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 24)
             }
             .background(.gray100)
         }
@@ -197,4 +190,5 @@ private extension MenuView {
             )
         ]
     }
+
 }
