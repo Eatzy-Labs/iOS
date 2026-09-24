@@ -33,6 +33,11 @@ struct RootView: View {
             SignUpView(
                 store: store.scope(state: \.signUp, action: \.signUp)
             )
+
+        case .mainTab:
+            MainTabView(
+                store: store.scope(state: \.mainTab, action: \.mainTab)
+            )
         }
     }
 }
