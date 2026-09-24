@@ -2,6 +2,8 @@
 //  MainTabView.swift
 //  Eatzy
 //
+//  Created by sun on 9/24/26.
+//
 
 import ComposableArchitecture
 import SwiftUI
@@ -17,7 +19,7 @@ struct MainTabView: View {
             )
         ) {
             Tab("Menu", systemImage: "fork.knife", value: MainTabFeature.State.Tab.menu) {
-                MenuView()
+                MenuView(store: store)
             }
 
             Tab("Map", systemImage: "map.fill", value: MainTabFeature.State.Tab.map) {
