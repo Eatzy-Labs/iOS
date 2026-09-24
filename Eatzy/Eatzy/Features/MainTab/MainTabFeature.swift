@@ -32,6 +32,8 @@ struct MainTabFeature: Reducer {
         var selectedBreakfastSectionID: String?
         var selectedLunchSectionID: String?
         var selectedDinnerSectionID: String?
+        var selectedUniversity = "Kyungpook Univ"
+        var isMapVisible = false
 
         var isMenuAvailable: Bool {
             let selectedDay = Calendar.current.startOfDay(for: selectedDate)
@@ -49,6 +51,9 @@ struct MainTabFeature: Reducer {
         case lunchSectionSelected(String?)
         case dinnerSectionSelected(String?)
         case settingButtonTapped
+        case mapViewAppeared
+        case mapUniversityTapped
+        case mapSettingButtonTapped
     }
 
     var body: some Reducer<State, Action> {
@@ -82,6 +87,13 @@ struct MainTabFeature: Reducer {
                 return .none
 
             case .settingButtonTapped:
+                return .none
+
+            case .mapViewAppeared:
+                state.isMapVisible = true
+                return .none
+
+            case .mapUniversityTapped, .mapSettingButtonTapped:
                 return .none
             }
         }
