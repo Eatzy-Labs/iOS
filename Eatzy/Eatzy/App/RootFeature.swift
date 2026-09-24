@@ -15,12 +15,14 @@ struct RootFeature: Reducer {
             case login
             case onboarding
             case signUp
+            case mainTab
         }
 
         var route: Route = .splash
         var login = LoginFeature.State()
         var onboarding = OnboardingFeature.State()
         var signUp = SignUpFeature.State()
+        var mainTab = MainTabFeature.State()
     }
 
     @CasePathable
@@ -30,6 +32,7 @@ struct RootFeature: Reducer {
         case login(LoginFeature.Action)
         case onboarding(OnboardingFeature.Action)
         case signUp(SignUpFeature.Action)
+        case mainTab(MainTabFeature.Action)
     }
 
     @Dependency(\.continuousClock) private var clock
@@ -51,6 +54,10 @@ struct RootFeature: Reducer {
             SignUpFeature()
         }
 
+        Scope(state: \.mainTab, action: \.mainTab) {
+            MainTabFeature()
+        }
+
         Reduce { state, action in
             switch action {
             case .splashTask:
@@ -64,15 +71,20 @@ struct RootFeature: Reducer {
                 state.route = .login
                 return .none
 
-        case .login(.signUpButtonTapped):
-            state.onboarding = OnboardingFeature.State(entryPoint: .signUp)
-            state.route = .onboarding
-            return .none
+            case .login(.signUpButtonTapped):
+                state.onboarding = OnboardingFeature.State(entryPoint: .signUp)
+                state.route = .onboarding
+                return .none
 
-        case .login(.guestButtonTapped):
-            state.onboarding = OnboardingFeature.State(entryPoint: .guest)
-            state.route = .onboarding
-            return .none
+            case .login(.guestButtonTapped):
+                state.onboarding = OnboardingFeature.State(entryPoint: .guest)
+                state.route = .onboarding
+                return .none
+
+            case .login(.loginButtonTapped):
+                state.mainTab = MainTabFeature.State()
+                state.route = .mainTab
+                return .none
 
             case .login:
                 return .none
@@ -83,6 +95,8 @@ struct RootFeature: Reducer {
 
             case .onboarding(.delegate(.onboardingCompleted)):
                 guard state.onboarding.entryPoint == .signUp else {
+                    state.mainTab = MainTabFeature.State()
+                    state.route = .mainTab
                     return .none
                 }
                 state.signUp = SignUpFeature.State()
@@ -97,9 +111,14 @@ struct RootFeature: Reducer {
                 return .none
 
             case .signUp(.delegate(.signUpCompleted)):
+                state.mainTab = MainTabFeature.State()
+                state.route = .mainTab
                 return .none
 
             case .signUp:
+                return .none
+
+            case .mainTab:
                 return .none
             }
         }
