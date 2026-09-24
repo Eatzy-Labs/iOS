@@ -2,6 +2,8 @@
 //  RootView.swift
 //  Eatzy
 //
+//  Created by sun on 9/24/26.
+//
 
 import ComposableArchitecture
 import SwiftUI
@@ -20,6 +22,11 @@ struct RootView: View {
         case .login:
             LoginView(
                 store: store.scope(state: \.login, action: \.login)
+            )
+
+        case .onboarding:
+            OnboardingView(
+                store: store.scope(state: \.onboarding, action: \.onboarding)
             )
         }
     }
