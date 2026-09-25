@@ -12,20 +12,28 @@ struct MainTabView: View {
     let store: StoreOf<MainTabFeature>
 
     var body: some View {
-        TabView(
-            selection: Binding(
-                get: { store.selectedTab },
-                set: { store.send(.tabSelected($0)) }
+        if store.isSettingPresented {
+            SettingView(
+                store: store.scope(state: \.setting, action: \.setting)
             )
-        ) {
-            Tab("Menu", systemImage: "fork.knife", value: MainTabFeature.State.Tab.menu) {
-                MenuView(store: store)
-            }
+        } else {
+            TabView(
+                selection: Binding(
+                    get: { store.selectedTab },
+                    set: { store.send(.tabSelected($0)) }
+                )
+            ) {
+                Tab("Menu", systemImage: "fork.knife", value: MainTabFeature.State.Tab.menu) {
+                    MenuView(store: store)
+                }
 
-            Tab("Map", systemImage: "map.fill", value: MainTabFeature.State.Tab.map) {
-                MapView(store: store)
+                Tab("Map", systemImage: "map.fill", value: MainTabFeature.State.Tab.map) {
+                    MapView(
+                        store: store.scope(state: \.map, action: \.map)
+                    )
+                }
             }
+            .tint(.orange500)
         }
-        .tint(.purple500)
     }
 }

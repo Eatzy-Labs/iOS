@@ -27,7 +27,6 @@
 				Clients/Network/Plugin/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Tokens/.gitkeep,
-				Features/Map/.gitkeep,
 				Info.plist,
 				"Resources/Preview Content/.gitkeep",
 				Shared/Extensions/.gitkeep,

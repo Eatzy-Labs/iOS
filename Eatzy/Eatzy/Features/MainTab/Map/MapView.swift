@@ -8,23 +8,23 @@ import NMapsMap
 import SwiftUI
 
 struct MapView: View {
-    let store: StoreOf<MainTabFeature>
+    let store: StoreOf<MapFeature>
 
     var body: some View {
         VStack(spacing: 0) {
             EatzyNavigationBar(
                 leading: .dropdownTitle(store.selectedUniversity) {
-                    store.send(.mapUniversityTapped)
+                    store.send(.universityButtonTapped)
                 },
                 trailing: [
                     .icon(.icSetting, accessibilityLabel: "Settings") {
-                        store.send(.mapSettingButtonTapped)
+                        store.send(.settingButtonTapped)
                     }
                 ]
             )
 
             ZStack(alignment: .top) {
-                NaverMapView(places: store.visibleMapPlaces)
+                NaverMapView(places: store.visiblePlaces)
                     .ignoresSafeArea(edges: .bottom)
 
                 ScrollView(.horizontal) {
@@ -42,7 +42,7 @@ struct MapView: View {
         }
         .background(.coreWhite)
         .onAppear {
-            store.send(.mapViewAppeared)
+            store.send(.viewAppeared)
         }
     }
 }
@@ -52,9 +52,9 @@ private extension MapView {
         EatzyChipButton(
             category.title,
             icon: category.icon,
-            state: store.selectedMapCategory == category ? .selected : .unselected
+            state: store.selectedCategory == category ? .selected : .unselected
         ) {
-            store.send(.mapCategorySelected(category))
+            store.send(.categorySelected(category))
         }
     }
 }

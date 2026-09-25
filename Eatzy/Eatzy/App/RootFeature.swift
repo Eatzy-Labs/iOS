@@ -82,7 +82,7 @@ struct RootFeature: Reducer {
                 return .none
 
             case .login(.loginButtonTapped):
-                state.mainTab = MainTabFeature.State()
+                state.mainTab = MainTabFeature.State(isAuthenticated: true)
                 state.route = .mainTab
                 return .none
 
@@ -95,7 +95,7 @@ struct RootFeature: Reducer {
 
             case .onboarding(.delegate(.onboardingCompleted)):
                 guard state.onboarding.entryPoint == .signUp else {
-                    state.mainTab = MainTabFeature.State()
+                    state.mainTab = MainTabFeature.State(isAuthenticated: false)
                     state.route = .mainTab
                     return .none
                 }
@@ -111,11 +111,16 @@ struct RootFeature: Reducer {
                 return .none
 
             case .signUp(.delegate(.signUpCompleted)):
-                state.mainTab = MainTabFeature.State()
+                state.mainTab = MainTabFeature.State(isAuthenticated: true)
                 state.route = .mainTab
                 return .none
 
             case .signUp:
+                return .none
+
+            case .mainTab(.delegate(.loginRequired)):
+                state.login = LoginFeature.State()
+                state.route = .login
                 return .none
 
             case .mainTab:

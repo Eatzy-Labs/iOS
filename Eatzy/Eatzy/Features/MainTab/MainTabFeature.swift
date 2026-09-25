@@ -32,10 +32,13 @@ struct MainTabFeature: Reducer {
         var selectedBreakfastSectionID: String?
         var selectedLunchSectionID: String?
         var selectedDinnerSectionID: String?
-        var selectedUniversity = "Kyungpook Univ"
-        var mapPlaces = MapMockData.places
-        var selectedMapCategory: MapPlace.Category = .all
-        var isMapVisible = false
+        var isSettingPresented = false
+        var map = MapFeature.State()
+        var setting: SettingFeature.State
+
+        init(isAuthenticated: Bool = true) {
+            setting = SettingFeature.State(isAuthenticated: isAuthenticated)
+        }
 
         var isMenuAvailable: Bool {
             let selectedDay = Calendar.current.startOfDay(for: selectedDate)
@@ -44,15 +47,9 @@ struct MainTabFeature: Reducer {
                 && selectedCafeteria == MainTabFeature.cafeterias.first
         }
 
-        var visibleMapPlaces: [MapPlace] {
-            guard selectedMapCategory != .all else {
-                return mapPlaces
-            }
-
-            return mapPlaces.filter { $0.category == selectedMapCategory }
-        }
     }
 
+    @CasePathable
     enum Action {
         case tabSelected(State.Tab)
         case dateSelected(Date)
@@ -61,13 +58,24 @@ struct MainTabFeature: Reducer {
         case lunchSectionSelected(String?)
         case dinnerSectionSelected(String?)
         case settingButtonTapped
-        case mapViewAppeared
-        case mapUniversityTapped
-        case mapSettingButtonTapped
-        case mapCategorySelected(MapPlace.Category)
+        case map(MapFeature.Action)
+        case setting(SettingFeature.Action)
+        case delegate(Delegate)
+
+        enum Delegate {
+            case loginRequired
+        }
     }
 
     var body: some Reducer<State, Action> {
+        Scope(state: \.map, action: \.map) {
+            MapFeature()
+        }
+
+        Scope(state: \.setting, action: \.setting) {
+            SettingFeature()
+        }
+
         Reduce { state, action in
             switch action {
             case let .tabSelected(tab):
@@ -97,18 +105,24 @@ struct MainTabFeature: Reducer {
                 state.selectedDinnerSectionID = sectionID
                 return .none
 
-            case .settingButtonTapped:
+            case .settingButtonTapped, .map(.delegate(.settingRequested)):
+                state.isSettingPresented = true
                 return .none
 
-            case .mapViewAppeared:
-                state.isMapVisible = true
+            case .map:
                 return .none
 
-            case .mapUniversityTapped, .mapSettingButtonTapped:
+            case .setting(.delegate(.backRequested)):
+                state.isSettingPresented = false
                 return .none
 
-            case let .mapCategorySelected(category):
-                state.selectedMapCategory = category
+            case .setting(.delegate(.loginRequired)):
+                return .send(.delegate(.loginRequired))
+
+            case .setting:
+                return .none
+
+            case .delegate:
                 return .none
             }
         }
