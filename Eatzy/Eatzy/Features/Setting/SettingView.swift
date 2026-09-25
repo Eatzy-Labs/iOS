@@ -10,6 +10,16 @@ struct SettingView: View {
     let store: StoreOf<SettingFeature>
 
     var body: some View {
+        if store.isProfilePresented {
+            ProfileView(
+                store: store.scope(state: \.profile, action: \.profile)
+            )
+        } else {
+            settingContent
+        }
+    }
+
+    var settingContent: some View {
         VStack(spacing: 0) {
             EatzyNavigationBar(
                 leading: .back {
@@ -24,7 +34,9 @@ struct SettingView: View {
                             SettingProfileCard(
                                 userID: "happypibi1122",
                                 university: "POSTECH"
-                            )
+                            ) {
+                                store.send(.profileCardTapped)
+                            }
                         } else {
                             SettingLoginCard {
                                 store.send(.loginButtonTapped)
