@@ -8,17 +8,14 @@ import SwiftUI
 struct SettingProfileCard: View {
     let userID: String
     let university: String
+    var imageData: Data? = nil
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 16) {
-                    Image(.profile)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle())
+                    profileImage
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("ID: \(userID)")
@@ -53,5 +50,23 @@ struct SettingProfileCard: View {
             .contentShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    var profileImage: some View {
+        if let imageData,
+           let image = UIImage(data: imageData) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 60, height: 60)
+                .clipShape(Circle())
+        } else {
+            Image(.profile)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
+                .clipShape(Circle())
+        }
     }
 }

@@ -9,6 +9,7 @@ struct EatzyDropdown<Option: Hashable>: View {
     private let title: String
     private let options: [Option]
     private let optionTitle: (Option) -> String
+    private let onExpansionChanged: (Bool) -> Void
 
     @Binding private var selections: Set<Option>
     @State private var isExpanded = false
@@ -17,6 +18,7 @@ struct EatzyDropdown<Option: Hashable>: View {
         title: String,
         options: [Option],
         selections: Binding<Set<Option>>,
+        onExpansionChanged: @escaping (Bool) -> Void = { _ in },
         optionTitle: @escaping (Option) -> String
     ) {
         var seen = Set<Option>()
@@ -24,6 +26,7 @@ struct EatzyDropdown<Option: Hashable>: View {
         self.title = title
         self.options = options.filter { seen.insert($0).inserted }
         self._selections = selections
+        self.onExpansionChanged = onExpansionChanged
         self.optionTitle = optionTitle
     }
 
@@ -52,12 +55,14 @@ extension EatzyDropdown where Option == String {
     init(
         title: String,
         options: [String],
-        selections: Binding<Set<String>>
+        selections: Binding<Set<String>>,
+        onExpansionChanged: @escaping (Bool) -> Void = { _ in }
     ) {
         self.init(
             title: title,
             options: options,
             selections: selections,
+            onExpansionChanged: onExpansionChanged,
             optionTitle: { $0 }
         )
     }
@@ -69,6 +74,7 @@ private extension EatzyDropdown {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isExpanded.toggle()
             }
+            onExpansionChanged(isExpanded)
         } label: {
             HStack(alignment: .center, spacing: 2) {
                 Text(title)
