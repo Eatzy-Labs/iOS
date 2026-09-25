@@ -92,7 +92,7 @@ private extension ProfileView {
 
     @ViewBuilder
     func profileImageContent(fallback: ImageResource) -> some View {
-        if let data = store.profileImageData,
+        if let data = displayedProfile.imageData,
            let image = UIImage(data: data) {
             Image(uiImage: image)
                 .resizable()
@@ -138,10 +138,10 @@ private extension ProfileView {
 
     var readOnlyFields: some View {
         VStack(alignment: .leading, spacing: 20) {
-            readOnlyField(title: "ID", value: store.userID)
-            readOnlyField(title: "Email", value: store.email)
-            readOnlyField(title: "University", value: selectedUniversityTitle)
-            readOnlyField(title: "Country", value: selectedCountryTitle)
+            readOnlyField(title: "ID", value: store.profile.userID)
+            readOnlyField(title: "Email", value: store.profile.email)
+            readOnlyField(title: "University", value: store.profile.university)
+            readOnlyField(title: "Country", value: store.profile.country)
         }
     }
 
@@ -170,7 +170,7 @@ private extension ProfileView {
             fieldLabel("University") {
                 EatzyDropdown(
                     title: selectedUniversityTitle,
-                    options: ProfileMockData.universities,
+                    options: store.universities,
                     selections: selectedUniversity
                 )
             }
@@ -178,7 +178,7 @@ private extension ProfileView {
             fieldLabel("Country") {
                 EatzyDropdown(
                     title: selectedCountryTitle,
-                    options: ProfileMockData.countries,
+                    options: store.countries,
                     selections: selectedCountry,
                     onExpansionChanged: {
                         store.send(.countryDropdownExpansionChanged($0))
@@ -210,7 +210,7 @@ private extension ProfileView {
 
     var userID: Binding<String> {
         Binding(
-            get: { store.userID },
+            get: { store.draft.userID },
             set: { store.send(.userIDChanged($0)) }
         )
     }
@@ -224,7 +224,7 @@ private extension ProfileView {
 
     var email: Binding<String> {
         Binding(
-            get: { store.email },
+            get: { store.draft.email },
             set: { store.send(.emailChanged($0)) }
         )
     }
@@ -238,14 +238,14 @@ private extension ProfileView {
 
     var selectedUniversity: Binding<Set<String>> {
         Binding(
-            get: { store.selectedUniversity },
+            get: { [store.draft.university] },
             set: { store.send(.universitySelectionChanged($0)) }
         )
     }
 
     var selectedCountry: Binding<Set<String>> {
         Binding(
-            get: { store.selectedCountry },
+            get: { [store.draft.country] },
             set: { store.send(.countrySelectionChanged($0)) }
         )
     }
@@ -265,11 +265,15 @@ private extension ProfileView {
     }
 
     var selectedUniversityTitle: String {
-        store.selectedUniversity.first ?? "Please Select"
+        store.draft.university.isEmpty ? "Please Select" : store.draft.university
     }
 
     var selectedCountryTitle: String {
-        store.selectedCountry.first ?? "Please Select"
+        store.draft.country.isEmpty ? "Please Select" : store.draft.country
+    }
+
+    var displayedProfile: Profile {
+        store.isEditing ? store.draft : store.profile
     }
 }
 

@@ -4,6 +4,14 @@
 //
 
 enum ProfileMockData {
+    static let profile = Profile(
+        userID: "happypibi1122",
+        email: "aaaa@aaaa.com",
+        university: "POSTECH",
+        country: "Korea",
+        imageData: nil
+    )
+
     static let universities = [
         "POSTECH",
         "KNU",
@@ -24,4 +32,3 @@ enum ProfileMockData {
         "Malaysia"
     ]
 }
-

@@ -32,8 +32,9 @@ struct SettingView: View {
                     settingSection("PROFILE") {
                         if store.isAuthenticated {
                             SettingProfileCard(
-                                userID: "happypibi1122",
-                                university: "POSTECH"
+                                userID: store.profile.profile.userID,
+                                university: store.profile.profile.university,
+                                imageData: store.profile.profile.imageData
                             ) {
                                 store.send(.profileCardTapped)
                             }

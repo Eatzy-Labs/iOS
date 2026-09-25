@@ -9,26 +9,27 @@ import Foundation
 struct ProfileFeature: Reducer {
     @ObservableState
     struct State: Equatable {
-        struct Snapshot: Equatable {
-            let userID: String
-            let email: String
-            let selectedUniversity: Set<String>
-            let selectedCountry: Set<String>
-            let profileImageData: Data?
-        }
-
         var isEditing = false
-        var userID = "happypibi1122"
-        var email = "aaaa@aaaa.com"
+        var profile: Profile
+        var draft: Profile
+        var universities: [String]
+        var countries: [String]
         var idFieldState = EatzyTextfield.State.writing
         var emailFieldState = EatzyTextfield.State.writing
-        var selectedUniversity: Set<String> = ["POSTECH"]
-        var selectedCountry: Set<String> = ["Korea"]
-        var profileImageData: Data?
         var isPhotoPickerPresented = false
         var isCountryDropdownExpanded = false
         var isDiscardAlertPresented = false
-        var editSnapshot: Snapshot?
+
+        init(
+            profile: Profile = ProfileMockData.profile,
+            universities: [String] = ProfileMockData.universities,
+            countries: [String] = ProfileMockData.countries
+        ) {
+            self.profile = profile
+            self.draft = profile
+            self.universities = universities
+            self.countries = countries
+        }
     }
 
     enum Action {
@@ -45,6 +46,11 @@ struct ProfileFeature: Reducer {
         case photoPickerPresentationChanged(Bool)
         case profileImageDataLoaded(Data?)
         case countryDropdownExpansionChanged(Bool)
+        case profileLoaded(
+            profile: Profile,
+            universities: [String],
+            countries: [String]
+        )
         case discardAlertPresentationChanged(Bool)
         case discardChangesButtonTapped
         case cancelDiscardButtonTapped
@@ -66,31 +72,25 @@ struct ProfileFeature: Reducer {
                 return .send(.delegate(.backRequested))
 
             case .editButtonTapped:
-                state.editSnapshot = State.Snapshot(
-                    userID: state.userID,
-                    email: state.email,
-                    selectedUniversity: state.selectedUniversity,
-                    selectedCountry: state.selectedCountry,
-                    profileImageData: state.profileImageData
-                )
+                state.draft = state.profile
                 state.isEditing = true
                 return .none
 
             case .doneButtonTapped:
-                state.idFieldState = idValidationState(for: state.userID)
-                state.emailFieldState = emailValidationState(for: state.email)
+                state.idFieldState = idValidationState(for: state.draft.userID)
+                state.emailFieldState = emailValidationState(for: state.draft.email)
 
                 guard case .writing = state.idFieldState,
                       case .writing = state.emailFieldState else {
                     return .none
                 }
 
+                state.profile = state.draft
                 state.isEditing = false
-                state.editSnapshot = nil
                 return .none
 
             case let .userIDChanged(userID):
-                state.userID = userID
+                state.draft.userID = userID
                 state.idFieldState = idValidationState(for: userID)
                 return .none
 
@@ -99,7 +99,7 @@ struct ProfileFeature: Reducer {
                 return .none
 
             case let .emailChanged(email):
-                state.email = email
+                state.draft.email = email
                 state.emailFieldState = emailValidationState(for: email)
                 return .none
 
@@ -108,17 +108,21 @@ struct ProfileFeature: Reducer {
                 return .none
 
             case let .universitySelectionChanged(selection):
-                state.selectedUniversity = singleSelection(
+                if let university = singleSelection(
                     from: selection,
-                    previous: state.selectedUniversity
-                )
+                    previous: [state.draft.university]
+                ).first {
+                    state.draft.university = university
+                }
                 return .none
 
             case let .countrySelectionChanged(selection):
-                state.selectedCountry = singleSelection(
+                if let country = singleSelection(
                     from: selection,
-                    previous: state.selectedCountry
-                )
+                    previous: [state.draft.country]
+                ).first {
+                    state.draft.country = country
+                }
                 return .none
 
             case .profileImageTapped:
@@ -130,12 +134,19 @@ struct ProfileFeature: Reducer {
                 return .none
 
             case let .profileImageDataLoaded(data):
-                state.profileImageData = data
+                state.draft.imageData = data
                 state.isPhotoPickerPresented = false
                 return .none
 
             case let .countryDropdownExpansionChanged(isExpanded):
                 state.isCountryDropdownExpanded = isExpanded
+                return .none
+
+            case let .profileLoaded(profile, universities, countries):
+                state.profile = profile
+                state.draft = profile
+                state.universities = universities
+                state.countries = countries
                 return .none
 
             case let .discardAlertPresentationChanged(isPresented):
@@ -147,19 +158,11 @@ struct ProfileFeature: Reducer {
                 return .none
 
             case .discardChangesButtonTapped:
-                if let snapshot = state.editSnapshot {
-                    state.userID = snapshot.userID
-                    state.email = snapshot.email
-                    state.selectedUniversity = snapshot.selectedUniversity
-                    state.selectedCountry = snapshot.selectedCountry
-                    state.profileImageData = snapshot.profileImageData
-                }
-
+                state.draft = state.profile
                 state.idFieldState = .writing
                 state.emailFieldState = .writing
                 state.isDiscardAlertPresented = false
                 state.isEditing = false
-                state.editSnapshot = nil
                 return .none
 
             case .delegate:
