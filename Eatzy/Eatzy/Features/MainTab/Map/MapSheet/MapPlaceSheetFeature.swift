@@ -16,6 +16,7 @@ struct MapPlaceSheetFeature: Reducer {
     }
 
     enum Action {
+        case menuButtonTapped
         case delegate(Delegate)
 
         enum Delegate {
@@ -26,6 +27,9 @@ struct MapPlaceSheetFeature: Reducer {
     var body: some Reducer<State, Action> {
         Reduce { _, action in
             switch action {
+            case .menuButtonTapped:
+                return .none
+
             case .delegate:
                 return .none
             }

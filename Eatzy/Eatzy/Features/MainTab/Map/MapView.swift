@@ -54,7 +54,7 @@ struct MapView: View {
                 .custom(MapSheetMinimumDetent.self),
                 .custom(MapSheetMaximumDetent.self)
             ])
-            .presentationDragIndicator(.visible)
+            .presentationDragIndicator(.hidden)
             .presentationBackground(.coreWhite)
         }
     }
