@@ -103,7 +103,10 @@ struct MainTabFeature: Reducer {
                 return .none
 
             case let .menuSectionTapped(sectionID):
-                state.menuSheet.selectedSectionID = sectionID
+                state.menuSheet = MenuSheetFeature.State(
+                    selectedSectionID: sectionID,
+                    detail: MenuSheetMockData.detail(for: sectionID)
+                )
                 state.isMenuSheetPresented = true
                 return .none
 

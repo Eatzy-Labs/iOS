@@ -9,9 +9,14 @@ struct MenuSheetFeature: Reducer {
     @ObservableState
     struct State: Equatable {
         var selectedSectionID: String?
+        var detail: MenuSheet
 
-        init(selectedSectionID: String? = nil) {
+        init(
+            selectedSectionID: String? = nil,
+            detail: MenuSheet? = nil
+        ) {
             self.selectedSectionID = selectedSectionID
+            self.detail = detail ?? MenuSheetMockData.detail(for: selectedSectionID)
         }
     }
 
