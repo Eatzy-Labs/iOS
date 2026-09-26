@@ -29,9 +29,9 @@ struct MainTabFeature: Reducer {
         var selectedDate = Calendar.current.startOfDay(for: .now)
         var selectedCafeteria = MainTabFeature.cafeterias.first ?? ""
         var availableMenuDates: Set<Date> = [Calendar.current.startOfDay(for: .now)]
-        var selectedBreakfastSectionID: String?
-        var selectedLunchSectionID: String?
-        var selectedDinnerSectionID: String?
+        var selectedMenuSectionID: String?
+        var isMenuSheetPresented = false
+        var menuSheet = MenuSheetFeature.State()
         var isSettingPresented = false
         var map = MapFeature.State()
         var setting: SettingFeature.State
@@ -54,9 +54,10 @@ struct MainTabFeature: Reducer {
         case tabSelected(State.Tab)
         case dateSelected(Date)
         case cafeteriaSelected(String)
-        case breakfastSectionSelected(String?)
-        case lunchSectionSelected(String?)
-        case dinnerSectionSelected(String?)
+        case menuSectionSelectionChanged(String?)
+        case menuSectionTapped(String)
+        case menuSheetPresentationChanged(Bool)
+        case menuSheet(MenuSheetFeature.Action)
         case settingButtonTapped
         case map(MapFeature.Action)
         case setting(SettingFeature.Action)
@@ -68,6 +69,10 @@ struct MainTabFeature: Reducer {
     }
 
     var body: some Reducer<State, Action> {
+        Scope(state: \.menuSheet, action: \.menuSheet) {
+            MenuSheetFeature()
+        }
+
         Scope(state: \.map, action: \.map) {
             MapFeature()
         }
@@ -93,16 +98,24 @@ struct MainTabFeature: Reducer {
                 resetMenuSelections(&state)
                 return .none
 
-            case let .breakfastSectionSelected(sectionID):
-                state.selectedBreakfastSectionID = sectionID
+            case let .menuSectionSelectionChanged(sectionID):
+                state.selectedMenuSectionID = sectionID
                 return .none
 
-            case let .lunchSectionSelected(sectionID):
-                state.selectedLunchSectionID = sectionID
+            case let .menuSectionTapped(sectionID):
+                state.menuSheet.selectedSectionID = sectionID
+                state.isMenuSheetPresented = true
                 return .none
 
-            case let .dinnerSectionSelected(sectionID):
-                state.selectedDinnerSectionID = sectionID
+            case let .menuSheetPresentationChanged(isPresented):
+                state.isMenuSheetPresented = isPresented
+                return .none
+
+            case .menuSheet(.delegate(.dismissRequested)):
+                state.isMenuSheetPresented = false
+                return .none
+
+            case .menuSheet:
                 return .none
 
             case .settingButtonTapped, .map(.delegate(.settingRequested)):
@@ -129,8 +142,6 @@ struct MainTabFeature: Reducer {
     }
 
     private func resetMenuSelections(_ state: inout State) {
-        state.selectedBreakfastSectionID = nil
-        state.selectedLunchSectionID = nil
-        state.selectedDinnerSectionID = nil
+        state.selectedMenuSectionID = nil
     }
 }
