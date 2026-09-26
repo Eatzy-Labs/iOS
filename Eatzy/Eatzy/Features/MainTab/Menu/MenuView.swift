@@ -39,21 +39,21 @@ struct MenuView: View {
                             title: "BREAKFAST",
                             color: .yellow500,
                             sections: breakfastSections,
-                            selection: selectedBreakfastSectionID
+                            selection: selectedMenuSectionID
                         )
 
                         mealSection(
                             title: "LUNCH",
                             color: .blue500,
                             sections: lunchSections,
-                            selection: selectedLunchSectionID
+                            selection: selectedMenuSectionID
                         )
 
                         mealSection(
                             title: "DINNER",
                             color: .purple500,
                             sections: dinnerSections,
-                            selection: selectedDinnerSectionID
+                            selection: selectedMenuSectionID
                         )
                     }
                     .padding(.horizontal, 16)
@@ -64,6 +64,14 @@ struct MenuView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.coreWhite)
+        .sheet(isPresented: menuSheetPresentation) {
+            MenuSheetView(
+                store: store.scope(state: \.menuSheet, action: \.menuSheet)
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.hidden)
+            .presentationBackground(.coreWhite)
+        }
     }
 }
 
@@ -82,24 +90,17 @@ private extension MenuView {
         )
     }
 
-    var selectedBreakfastSectionID: Binding<String?> {
+    var selectedMenuSectionID: Binding<String?> {
         Binding(
-            get: { store.selectedBreakfastSectionID },
-            set: { store.send(.breakfastSectionSelected($0)) }
+            get: { store.selectedMenuSectionID },
+            set: { store.send(.menuSectionSelectionChanged($0)) }
         )
     }
 
-    var selectedLunchSectionID: Binding<String?> {
+    var menuSheetPresentation: Binding<Bool> {
         Binding(
-            get: { store.selectedLunchSectionID },
-            set: { store.send(.lunchSectionSelected($0)) }
-        )
-    }
-
-    var selectedDinnerSectionID: Binding<String?> {
-        Binding(
-            get: { store.selectedDinnerSectionID },
-            set: { store.send(.dinnerSectionSelected($0)) }
+            get: { store.isMenuSheetPresented },
+            set: { store.send(.menuSheetPresentationChanged($0)) }
         )
     }
 
@@ -117,7 +118,10 @@ private extension MenuView {
 
             EatzyCardMenu(
                 sections: sections,
-                selectedSectionID: selection
+                selectedSectionID: selection,
+                onSelect: { section in
+                    store.send(.menuSectionTapped(section.id))
+                }
             )
         }
         .padding(.top, 20)

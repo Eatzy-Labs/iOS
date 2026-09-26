@@ -7,17 +7,33 @@ enum MapMockData {
     static let places: [MapPlace] = [
         .init(
             id: "cafeteria-cheomseong",
-            name: "Cheomseong Cafeteria",
+            name: "114 Cheomseong Dorm Cafeteria",
             category: .cafeteria,
             latitude: 35.8901,
-            longitude: 128.6092
+            longitude: 128.6092,
+            subtitle: "첨성관(기숙사) 식당",
+            description: "A cafeteria located in the basement of Cheomseong Dormitory, mainly for dormitory residents.",
+            operatingHours: [
+                .init(label: "Breakfast", time: "07:00 ~ 09:00"),
+                .init(label: "Lunch", time: "11:30 ~ 14:00"),
+                .init(label: "Dinner", time: "17:30 ~ 19:00")
+            ],
+            imageNames: ["image-example1", "image-example2"]
         ),
         .init(
             id: "cafeteria-welfare",
-            name: "Welfare Cafeteria",
+            name: "305 Welfare Center Cafeteria",
             category: .cafeteria,
             latitude: 35.8876,
-            longitude: 128.6081
+            longitude: 128.6081,
+            subtitle: "복지관 식당",
+            description: "A cafeteria located in the Welfare Center for students and campus members.",
+            operatingHours: [
+                .init(label: "Breakfast", time: "07:00 ~ 09:00"),
+                .init(label: "Lunch", time: "11:30 ~ 14:00"),
+                .init(label: "Dinner", time: "17:30 ~ 19:00")
+            ],
+            imageNames: ["image-example3"]
         ),
         .init(
             id: "cafe-1",
