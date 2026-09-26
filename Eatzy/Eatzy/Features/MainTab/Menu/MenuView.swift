@@ -69,7 +69,7 @@ struct MenuView: View {
                 store: store.scope(state: \.menuSheet, action: \.menuSheet)
             )
             .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
+            .presentationDragIndicator(.hidden)
             .presentationBackground(.coreWhite)
         }
     }

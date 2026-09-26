@@ -10,22 +10,29 @@ struct MenuSheetView: View {
     let store: StoreOf<MenuSheetFeature>
 
     var body: some View {
-        ScrollView(.vertical) {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                Text(store.detail.title)
-                    .applyEatzyFont(.title_14_sb)
-                    .foregroundStyle(.coreBlack)
-                    .padding(.bottom, 20)
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(.gray300)
+                .frame(width: 36, height: 5)
+                .padding(.top, 8)
 
-                LazyVStack(alignment: .leading, spacing: 37) {
-                    ForEach(store.detail.dishes) { dish in
-                        dishSection(dish)
+            ScrollView(.vertical) {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    Text(store.detail.title)
+                        .applyEatzyFont(.title_14_sb)
+                        .foregroundStyle(.coreBlack)
+                        .padding(.bottom, 20)
+
+                    LazyVStack(alignment: .leading, spacing: 37) {
+                        ForEach(store.detail.dishes) { dish in
+                            dishSection(dish)
+                        }
                     }
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 32)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 24)
-            .padding(.bottom, 32)
         }
         .background(.coreWhite)
     }
