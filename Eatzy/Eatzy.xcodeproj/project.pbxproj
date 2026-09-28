@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A4C000000000000000000001 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = A4C000000000000000000003 /* ComposableArchitecture */; };
 		A4D000000000000000000001 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = A4D000000000000000000003 /* NMapsMap */; };
+		A4F000000000000000000001 /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = A4F000000000000000000003 /* Moya */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,15 +23,11 @@
 			membershipExceptions = (
 				Clients/LocationClient/.gitkeep,
 				Clients/MapClient/.gitkeep,
-				Clients/Network/API/.gitkeep,
-				Clients/Network/DTO/.gitkeep,
 				Clients/Network/Plugin/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Tokens/.gitkeep,
 				Info.plist,
 				"Resources/Preview Content/.gitkeep",
-				Shared/Extensions/.gitkeep,
-				Shared/Models/.gitkeep,
 				Shared/Utilities/.gitkeep,
 			);
 			target = A494E5CD306410C700C4C3C5 /* Eatzy */;
@@ -55,6 +52,7 @@
 			files = (
 				A4C000000000000000000001 /* ComposableArchitecture in Frameworks */,
 				A4D000000000000000000001 /* NMapsMap in Frameworks */,
+				A4F000000000000000000001 /* Moya in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,6 +98,7 @@
 			packageProductDependencies = (
 				A4C000000000000000000003 /* ComposableArchitecture */,
 				A4D000000000000000000003 /* NMapsMap */,
+				A4F000000000000000000003 /* Moya */,
 			);
 			productName = Eatzy;
 			productReference = A494E5CE306410C700C4C3C5 /* Eatzy.app */;
@@ -132,6 +131,7 @@
 			packageReferences = (
 				A4C000000000000000000002 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
 				A4D000000000000000000002 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
+				A4F000000000000000000002 /* XCRemoteSwiftPackageReference "Moya" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A494E5CF306410C700C4C3C5 /* Products */;
@@ -405,6 +405,14 @@
 				minimumVersion = 3.24.0;
 			};
 		};
+		A4F000000000000000000002 /* XCRemoteSwiftPackageReference "Moya" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Moya/Moya.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 15.0.3;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -417,6 +425,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A4D000000000000000000002 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
 			productName = NMapsMap;
+		};
+		A4F000000000000000000003 /* Moya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A4F000000000000000000002 /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = Moya;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
