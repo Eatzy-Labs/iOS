@@ -17,7 +17,7 @@ class BaseService<Target: BaseTargetType> {
     init(
         provider: MoyaProvider<Target>? = nil,
         decoder: JSONDecoder = JSONDecoder(),
-        tokenProvider: @escaping TokenProvider = { nil },
+        tokenProvider: @escaping TokenProvider = { KeychainTokenStore.shared.accessToken },
         additionalPlugins: [PluginType] = []
     ) {
         self.decoder = decoder
@@ -34,10 +34,10 @@ class BaseService<Target: BaseTargetType> {
         }
     }
 
-    func request<T: ResponseModelType>(
+    func request<T: Decodable>(
         _ target: Target,
         as responseType: T.Type = T.self
-    ) async throws -> BaseResponseBody<T> {
+    ) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
             provider.request(target) { [decoder] result in
                 switch result {
@@ -53,32 +53,38 @@ class BaseService<Target: BaseTargetType> {
         }
     }
 
-    private static func map<T: ResponseModelType>(
+    private static func map<T: Decodable>(
         _ response: Response,
         decoder: JSONDecoder,
         as responseType: T.Type
-    ) -> Result<BaseResponseBody<T>, Error> {
+    ) -> Result<T, Error> {
         switch response.statusCode {
         case 200...299:
             do {
                 return .success(
-                    try decoder.decode(BaseResponseBody<T>.self, from: response.data)
+                    try decoder.decode(T.self, from: response.data)
                 )
             } catch {
                 return .failure(NetworkError.responseDecodingError)
             }
 
-        case 400, 409, 422:
+        case 400...499:
             let errorResponse = try? decoder.decode(APIErrorResponse.self, from: response.data)
-            if let message = errorResponse?.message, !message.isEmpty {
-                return .failure(NetworkError.apiError(message: message))
+            if let errorResponse {
+                return .failure(
+                    NetworkError.apiError(
+                        code: errorResponse.code,
+                        reason: errorResponse.reason
+                    )
+                )
+            }
+            if response.statusCode == 401 || response.statusCode == 403 {
+                return .failure(NetworkError.unauthorized)
+            }
+            if response.statusCode == 404 {
+                return .failure(NetworkError.notFound)
             }
             return .failure(NetworkError.responseError)
-
-        case 401, 403:
-            return .failure(NetworkError.unauthorized)
-        case 404:
-            return .failure(NetworkError.notFound)
         case 500...599:
             return .failure(NetworkError.internalServerError)
         default:

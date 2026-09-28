@@ -7,16 +7,7 @@
 
 import Foundation
 
-protocol ResponseModelType: Decodable { }
-
-struct BaseResponseBody<T: ResponseModelType>: Decodable {
-    let success: Bool?
-    let code: String?
-    let message: String
-    let data: T?
-}
-
-struct EmptyResponseDTO: ResponseModelType, Equatable {
+struct EmptyResponseDTO: Decodable, Equatable {
     init() { }
 
     init(from decoder: Decoder) throws {
@@ -25,6 +16,12 @@ struct EmptyResponseDTO: ResponseModelType, Equatable {
 }
 
 struct APIErrorResponse: Decodable {
-    let message: String?
-    let code: String?
+    let code: String
+    let detail: String?
+    let errors: [String]?
+    let instance: String?
+    let reason: String?
+    let status: Int?
+    let title: String?
+    let type: String?
 }

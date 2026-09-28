@@ -23,7 +23,7 @@ final class MoyaLoggingPlugin: PluginType {
         if let headers = request.allHTTPHeaderFields, !headers.isEmpty {
             log += "\nHeaders: \(redacted(headers))"
         }
-        if let body = request.httpBody, let bodyText = formatted(data: body) {
+        if let body = request.httpBody, let bodyText = formatted(data: body, redactingBody: true) {
             log += "\nBody: \(bodyText)"
         }
 
@@ -36,7 +36,7 @@ final class MoyaLoggingPlugin: PluginType {
         switch result {
         case let .success(response):
             let url = response.request?.url?.absoluteString ?? "nil"
-            let body = formatted(data: response.data) ?? "<empty>"
+            let body = formatted(data: response.data, redactingBody: true) ?? "<empty>"
             print("\n⬅️ [\(response.statusCode)] \(url)\nResponse: \(body)")
 
         case let .failure(error):
@@ -54,11 +54,12 @@ final class MoyaLoggingPlugin: PluginType {
         }
     }
 
-    private func formatted(data: Data) -> String? {
+    private func formatted(data: Data, redactingBody: Bool = false) -> String? {
         guard !data.isEmpty else { return nil }
 
         if
-            let object = try? JSONSerialization.jsonObject(with: data),
+            var object = try? JSONSerialization.jsonObject(with: data),
+            !redactingBody || redactSensitiveValues(in: &object),
             let prettyData = try? JSONSerialization.data(
                 withJSONObject: object,
                 options: [.prettyPrinted, .sortedKeys]
@@ -68,5 +69,16 @@ final class MoyaLoggingPlugin: PluginType {
         }
 
         return String(data: data, encoding: .utf8)
+    }
+
+    private func redactSensitiveValues(in object: inout Any) -> Bool {
+        guard var dictionary = object as? [String: Any] else { return true }
+        ["password", "verificationToken", "accessToken", "refreshToken"].forEach {
+            if dictionary[$0] != nil {
+                dictionary[$0] = "<redacted>"
+            }
+        }
+        object = dictionary
+        return true
     }
 }
