@@ -23,7 +23,6 @@
 			membershipExceptions = (
 				Clients/LocationClient/.gitkeep,
 				Clients/MapClient/.gitkeep,
-				Clients/Network/Plugin/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Tokens/.gitkeep,
 				Info.plist,
