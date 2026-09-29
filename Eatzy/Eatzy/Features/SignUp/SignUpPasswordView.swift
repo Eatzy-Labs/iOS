@@ -56,13 +56,20 @@ struct SignUpPasswordView: View {
                         showsCounter: false
                     )
                     .padding(.top, 12)
+
+                    if let errorMessage = store.errorMessage {
+                        Text(errorMessage)
+                            .applyEatzyFont(.caption_12_m)
+                            .foregroundStyle(.red500)
+                            .padding(.top, 4)
+                    }
                 }
             }
             .padding(.horizontal, 20)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             EatzyCTAButton(
-                "Get started",
+                store.isLoading ? "Signing up..." : "Get started",
                 state: store.canCompleteSignUp ? .active : .inactive
             ) {
                 store.send(.continueButtonTapped)

@@ -23,6 +23,12 @@ struct SignUpFeature: Reducer {
         var passwordFieldState = EatzyTextfield.State.placeholder
         var confirmedPassword = ""
         var confirmedPasswordFieldState = EatzyTextfield.State.placeholder
+        var universityCode = ""
+        var nationality = ""
+        var preferredLanguage = "en"
+        var termsAgreed = true
+        var isLoading = false
+        var errorMessage: String?
 
         var canContinueFromEmail: Bool {
             email.isValidEmail
@@ -33,7 +39,11 @@ struct SignUpFeature: Reducer {
         }
 
         var canCompleteSignUp: Bool {
-            !password.isEmpty && password == confirmedPassword
+            !password.isEmpty
+                && password == confirmedPassword
+                && !universityCode.isEmpty
+                && !nationality.isEmpty
+                && !isLoading
         }
     }
 
@@ -45,6 +55,8 @@ struct SignUpFeature: Reducer {
         case confirmedPasswordChanged(String)
         case confirmedPasswordFieldStateChanged(EatzyTextfield.State)
         case continueButtonTapped
+        case signUpResponse(Result<SignUpResponseDTO, NetworkError>)
+        case loginResponse(Result<Void, NetworkError>)
         case backButtonTapped
         case delegate(Delegate)
 
@@ -54,11 +66,15 @@ struct SignUpFeature: Reducer {
         }
     }
 
+    @Dependency(\.signUpClient) private var signUpClient
+    @Dependency(\.loginClient) private var loginClient
+
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case let .emailChanged(email):
                 state.email = email
+                state.errorMessage = nil
                 if email.isEmpty {
                     state.emailFieldState = .placeholder
                 } else if email.isValidEmail {
@@ -74,6 +90,7 @@ struct SignUpFeature: Reducer {
 
             case let .passwordChanged(password):
                 state.password = password
+                state.errorMessage = nil
                 state.passwordFieldState = password.isEmpty ? .placeholder : .filled
 
                 if password.isEmpty {
@@ -88,6 +105,7 @@ struct SignUpFeature: Reducer {
 
             case let .confirmedPasswordChanged(password):
                 state.confirmedPassword = password
+                state.errorMessage = nil
                 state.confirmedPasswordFieldState = password.isEmpty ? .placeholder : .filled
                 return .none
 
@@ -100,7 +118,29 @@ struct SignUpFeature: Reducer {
                 case .email where state.canContinueFromEmail:
                     state.step = .password
                 case .password where state.canCompleteSignUp:
-                    return .send(.delegate(.signUpCompleted))
+                    state.isLoading = true
+                    state.errorMessage = nil
+                    let request = SignUpRequestDTO(
+                        email: state.email,
+                        nationality: state.nationality,
+                        password: state.password,
+                        preferredLanguage: state.preferredLanguage,
+                        termsAgreed: state.termsAgreed,
+                        universityCode: state.universityCode,
+                        verificationToken: nil
+                    )
+                    return .run { send in
+                        do {
+                            let response = try await signUpClient.signUp(request)
+                            await send(.signUpResponse(.success(response)))
+                        } catch {
+                            await send(
+                                .signUpResponse(
+                                    .failure(error as? NetworkError ?? .unknownError)
+                                )
+                            )
+                        }
+                    }
                 default:
                     break
                 }
@@ -114,6 +154,36 @@ struct SignUpFeature: Reducer {
                     state.step = .email
                     return .none
                 }
+
+            case .signUpResponse(.success):
+                let email = state.email
+                let password = state.password
+                return .run { send in
+                    do {
+                        try await loginClient.login(email, password)
+                        await send(.loginResponse(.success(())))
+                    } catch {
+                        await send(
+                            .loginResponse(
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+
+            case let .signUpResponse(.failure(error)):
+                state.isLoading = false
+                state.errorMessage = error.description
+                return .none
+
+            case .loginResponse(.success):
+                state.isLoading = false
+                return .send(.delegate(.signUpCompleted))
+
+            case let .loginResponse(.failure(error)):
+                state.isLoading = false
+                state.errorMessage = "Account created, but login failed. \(error.description)"
+                return .none
 
             case .delegate:
                 return .none

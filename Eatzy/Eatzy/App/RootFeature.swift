@@ -81,7 +81,7 @@ struct RootFeature: Reducer {
                 state.route = .onboarding
                 return .none
 
-            case .login(.loginButtonTapped):
+            case .login(.delegate(.loginCompleted)):
                 state.mainTab = MainTabFeature.State(isAuthenticated: true)
                 state.route = .mainTab
                 return .none
@@ -99,7 +99,16 @@ struct RootFeature: Reducer {
                     state.route = .mainTab
                     return .none
                 }
-                state.signUp = SignUpFeature.State()
+                guard
+                    let universityCode = state.onboarding.selectedUniversityCode,
+                    let nationality = state.onboarding.selectedNationalityCode
+                else {
+                    return .none
+                }
+                state.signUp = SignUpFeature.State(
+                    universityCode: universityCode,
+                    nationality: nationality
+                )
                 state.route = .signUp
                 return .none
 

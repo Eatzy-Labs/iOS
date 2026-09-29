@@ -54,8 +54,15 @@ struct LoginView: View {
                 }
                 .padding(.top, 33)
 
+                if let errorMessage = store.errorMessage {
+                    Text(errorMessage)
+                        .applyEatzyFont(.caption_12_m)
+                        .foregroundStyle(.red500)
+                        .padding(.top, 4)
+                }
+
                 EatzyCTAButton(
-                    "Login",
+                    store.isLoading ? "Logging in..." : "Login",
                     state: store.isLoginEnabled ? .active : .inactive
                 ) {
                     store.send(.loginButtonTapped)

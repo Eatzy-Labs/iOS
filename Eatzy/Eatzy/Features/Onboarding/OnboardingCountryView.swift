@@ -11,7 +11,13 @@ import SwiftUI
 struct OnboardingCountryView: View {
     let store: StoreOf<OnboardingFeature>
 
-    private let countries = ["country1", "country2", "country3", "country4", "country5"]
+    private let countries = [
+        "Korea",
+        "United States",
+        "China",
+        "Japan",
+        "Vietnam"
+    ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
