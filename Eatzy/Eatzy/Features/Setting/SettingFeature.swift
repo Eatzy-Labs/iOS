@@ -79,7 +79,9 @@ struct SettingFeature: Reducer {
                     userID: response.profileId ?? response.nickname ?? response.id,
                     email: response.email,
                     university: state.profile.profile.university,
-                    country: response.nationality,
+                    country: OnboardingSignUpMetadata.nationalityName(
+                        for: response.nationality
+                    ),
                     imageData: state.profile.profile.imageData
                 )
                 state.profile.profile = profile
@@ -103,6 +105,10 @@ struct SettingFeature: Reducer {
 
             case .profile(.delegate(.backRequested)):
                 state.isProfilePresented = false
+                return .none
+
+            case let .profile(.delegate(.profileUpdated(response))):
+                state.me = response
                 return .none
 
             case .profile:

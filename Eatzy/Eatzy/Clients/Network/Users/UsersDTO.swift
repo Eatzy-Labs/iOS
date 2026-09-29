@@ -16,3 +16,22 @@ struct MeResponseDTO: Decodable, Equatable, Sendable {
     let status: String
     let universityId: Int
 }
+
+struct UpdateProfileRequestDTO: Encodable, Equatable, Sendable {
+    let nationality: String?
+    let nickname: String?
+    let preferredLanguage: String?
+    let profileId: String?
+
+    init(
+        nationality: String? = nil,
+        nickname: String? = nil,
+        preferredLanguage: String? = nil,
+        profileId: String? = nil
+    ) {
+        self.nationality = nationality
+        self.nickname = nickname
+        self.preferredLanguage = preferredLanguage
+        self.profileId = profileId
+    }
+}

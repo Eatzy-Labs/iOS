@@ -55,6 +55,16 @@ struct ProfileView: View {
         } message: {
             Text("Your changes will not be saved")
         }
+        .alert(
+            "Unable to save changes",
+            isPresented: saveErrorPresentation
+        ) {
+            Button("OK") {
+                store.send(.saveErrorDismissed)
+            }
+        } message: {
+            Text(store.saveErrorMessage ?? "")
+        }
     }
 }
 
@@ -116,6 +126,7 @@ private extension ProfileView {
                     showsCounter: false,
                     keyboardType: .emailAddress
                 )
+                .disabled(true)
             }
 
             fieldLabel("University") {
@@ -124,6 +135,7 @@ private extension ProfileView {
                     options: store.universities,
                     selections: selectedUniversity
                 )
+                .disabled(true)
             }
 
             fieldLabel("Country") {
@@ -206,6 +218,17 @@ private extension ProfileView {
         Binding(
             get: { store.isDiscardAlertPresented },
             set: { store.send(.discardAlertPresentationChanged($0)) }
+        )
+    }
+
+    var saveErrorPresentation: Binding<Bool> {
+        Binding(
+            get: { store.saveErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    store.send(.saveErrorDismissed)
+                }
+            }
         )
     }
 

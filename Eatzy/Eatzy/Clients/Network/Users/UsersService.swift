@@ -13,4 +13,8 @@ final class UsersService {
     func fetchMe() async throws -> MeResponseDTO {
         try await service.request(.me)
     }
+
+    func updateProfile(_ request: UpdateProfileRequestDTO) async throws -> MeResponseDTO {
+        try await service.request(.updateProfile(request))
+    }
 }

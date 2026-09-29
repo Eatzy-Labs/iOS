@@ -7,14 +7,29 @@ import ComposableArchitecture
 
 struct UsersClient {
     var fetchMe: @Sendable () async throws -> MeResponseDTO
+    var updateProfile: @Sendable (UpdateProfileRequestDTO) async throws -> MeResponseDTO
 }
 
 extension UsersClient: DependencyKey {
-    static let liveValue = Self {
-        try await UsersService().fetchMe()
-    }
+    static let liveValue = Self(
+        fetchMe: {
+            try await UsersService().fetchMe()
+        },
+        updateProfile: { request in
+            try await UsersService().updateProfile(request)
+        }
+    )
 
-    static let testValue = Self {
+    static let testValue = Self(
+        fetchMe: {
+            testResponse
+        },
+        updateProfile: { _ in
+            testResponse
+        }
+    )
+
+    nonisolated private static var testResponse: MeResponseDTO {
         MeResponseDTO(
             createdAt: "",
             email: "",
