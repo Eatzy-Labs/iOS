@@ -9,15 +9,6 @@ import ComposableArchitecture
 import Foundation
 
 struct MainTabFeature: Reducer {
-    static let cafeterias = [
-        "114(Cheomseong)",
-        "305(Welfare)",
-        "116(Info)",
-        "408(Engineer)",
-        "109(FastFood)",
-        "103(GP)"
-    ]
-
     @ObservableState
     struct State: Equatable {
         enum Tab: Hashable {
@@ -27,8 +18,15 @@ struct MainTabFeature: Reducer {
 
         var selectedTab: Tab = .menu
         var selectedDate = Calendar.current.startOfDay(for: .now)
-        var selectedCafeteria = MainTabFeature.cafeterias.first ?? ""
-        var availableMenuDates: Set<Date> = [Calendar.current.startOfDay(for: .now)]
+        var preferredUniversityCode: String
+        var selectedUniversityCode: String
+        var selectedCafeteriaCode = ""
+        var catalogUniversities: [CatalogUniversityDTO] = []
+        var isCatalogLoading = false
+        var catalogErrorMessage: String?
+        var mealsResponse: MealsResponseDTO?
+        var isMealsLoading = false
+        var mealsErrorMessage: String?
         var selectedMenuSectionID: String?
         var isMenuSheetPresented = false
         var menuSheet = MenuSheetFeature.State()
@@ -36,15 +34,22 @@ struct MainTabFeature: Reducer {
         var map = MapFeature.State()
         var setting: SettingFeature.State
 
-        init(isAuthenticated: Bool = true) {
+        init(isAuthenticated: Bool = true, universityCode: String = "knu") {
+            preferredUniversityCode = universityCode
+            selectedUniversityCode = universityCode
             setting = SettingFeature.State(isAuthenticated: isAuthenticated)
         }
 
-        var isMenuAvailable: Bool {
-            let selectedDay = Calendar.current.startOfDay(for: selectedDate)
+        var cafeterias: [CatalogCafeteriaDTO] {
+            catalogUniversities
+                .first(where: { $0.code == selectedUniversityCode })?
+                .cafeterias ?? []
+        }
 
-            return availableMenuDates.contains(selectedDay)
-                && selectedCafeteria == MainTabFeature.cafeterias.first
+        var isMenuAvailable: Bool {
+            mealsResponse?.meals.contains { meal in
+                meal.options.contains { !$0.items.isEmpty || $0.notice != nil }
+            } == true
         }
 
     }
@@ -52,6 +57,17 @@ struct MainTabFeature: Reducer {
     @CasePathable
     enum Action {
         case tabSelected(State.Tab)
+        case menuViewAppeared
+        case catalogRetryTapped
+        case catalogResponse(Result<CatalogResponseDTO, NetworkError>)
+        case loadMeals
+        case mealsRetryTapped
+        case mealsResponse(
+            universityCode: String,
+            cafeteriaCode: String,
+            date: String,
+            Result<MealsResponseDTO, NetworkError>
+        )
         case dateSelected(Date)
         case cafeteriaSelected(String)
         case menuSectionSelectionChanged(String?)
@@ -66,6 +82,13 @@ struct MainTabFeature: Reducer {
         enum Delegate {
             case loginRequired
         }
+    }
+
+    @Dependency(\.catalogClient) private var catalogClient
+    @Dependency(\.mealsClient) private var mealsClient
+
+    nonisolated private enum CancelID: Hashable, Sendable {
+        case meals
     }
 
     var body: some Reducer<State, Action> {
@@ -83,29 +106,140 @@ struct MainTabFeature: Reducer {
 
         Reduce { state, action in
             switch action {
+            case .menuViewAppeared:
+                guard state.catalogUniversities.isEmpty, !state.isCatalogLoading else {
+                    return .none
+                }
+                state.isCatalogLoading = true
+                state.catalogErrorMessage = nil
+                return .run { send in
+                    do {
+                        let response = try await catalogClient.fetch("en")
+                        await send(.catalogResponse(.success(response)))
+                    } catch {
+                        await send(
+                            .catalogResponse(
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+
+            case .catalogRetryTapped:
+                state.catalogUniversities = []
+                state.isCatalogLoading = false
+                return .send(.menuViewAppeared)
+
+            case let .catalogResponse(.success(response)):
+                state.isCatalogLoading = false
+                state.catalogUniversities = response.universities
+                let university = response.universities.first {
+                    $0.code == state.preferredUniversityCode
+                } ?? response.universities.first
+                state.selectedUniversityCode = university?.code ?? ""
+                state.selectedCafeteriaCode = university?.cafeterias.first?.code ?? ""
+                return .send(.loadMeals)
+
+            case let .catalogResponse(.failure(error)):
+                state.isCatalogLoading = false
+                state.catalogErrorMessage = error.description
+                return .none
+
+            case .loadMeals:
+                guard
+                    !state.selectedUniversityCode.isEmpty,
+                    !state.selectedCafeteriaCode.isEmpty
+                else {
+                    state.mealsResponse = nil
+                    return .none
+                }
+
+                let universityCode = state.selectedUniversityCode
+                let cafeteriaCode = state.selectedCafeteriaCode
+                let date = Self.dateString(from: state.selectedDate)
+                state.isMealsLoading = true
+                state.mealsErrorMessage = nil
+                state.mealsResponse = nil
+
+                return .run { send in
+                    do {
+                        let response = try await mealsClient.fetch(
+                            universityCode,
+                            cafeteriaCode,
+                            date,
+                            "en"
+                        )
+                        await send(
+                            .mealsResponse(
+                                universityCode: universityCode,
+                                cafeteriaCode: cafeteriaCode,
+                                date: date,
+                                .success(response)
+                            )
+                        )
+                    } catch {
+                        await send(
+                            .mealsResponse(
+                                universityCode: universityCode,
+                                cafeteriaCode: cafeteriaCode,
+                                date: date,
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+                .cancellable(id: CancelID.meals, cancelInFlight: true)
+
+            case .mealsRetryTapped:
+                return .send(.loadMeals)
+
+            case let .mealsResponse(universityCode, cafeteriaCode, date, result):
+                guard
+                    universityCode == state.selectedUniversityCode,
+                    cafeteriaCode == state.selectedCafeteriaCode,
+                    date == Self.dateString(from: state.selectedDate)
+                else {
+                    return .none
+                }
+                state.isMealsLoading = false
+                switch result {
+                case let .success(response):
+                    state.mealsResponse = response
+                    state.mealsErrorMessage = nil
+                case let .failure(error):
+                    state.mealsResponse = nil
+                    state.mealsErrorMessage = error.description
+                }
+                return .none
+
             case let .tabSelected(tab):
                 state.selectedTab = tab
                 return .none
 
             case let .dateSelected(date):
                 state.selectedDate = date
-                state.selectedCafeteria = Self.cafeterias.first ?? ""
                 resetMenuSelections(&state)
-                return .none
+                return .send(.loadMeals)
 
             case let .cafeteriaSelected(cafeteria):
-                state.selectedCafeteria = cafeteria
+                state.selectedCafeteriaCode = cafeteria
                 resetMenuSelections(&state)
-                return .none
+                return .send(.loadMeals)
 
             case let .menuSectionSelectionChanged(sectionID):
                 state.selectedMenuSectionID = sectionID
                 return .none
 
             case let .menuSectionTapped(sectionID):
+                guard let detail = MealsPresentation.sheet(
+                    for: sectionID,
+                    in: state.mealsResponse
+                ) else {
+                    return .none
+                }
                 state.menuSheet = MenuSheetFeature.State(
                     selectedSectionID: sectionID,
-                    detail: MenuSheetMockData.detail(for: sectionID)
+                    detail: detail
                 )
                 state.isMenuSheetPresented = true
                 return .none
@@ -146,5 +280,15 @@ struct MainTabFeature: Reducer {
 
     private func resetMenuSelections(_ state: inout State) {
         state.selectedMenuSectionID = nil
+    }
+
+    private static func dateString(from date: Date) -> String {
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        return String(
+            format: "%04d-%02d-%02d",
+            components.year ?? 0,
+            components.month ?? 0,
+            components.day ?? 0
+        )
     }
 }
