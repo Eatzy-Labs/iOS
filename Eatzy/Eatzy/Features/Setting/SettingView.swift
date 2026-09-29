@@ -31,6 +31,13 @@ struct SettingView: View {
         } message: {
             Text("Are you sure you want to log out?")
         }
+        .alert("Unable to log out", isPresented: logoutErrorPresentation) {
+            Button("OK") {
+                store.send(.logoutErrorDismissed)
+            }
+        } message: {
+            Text(store.logoutErrorMessage ?? "")
+        }
     }
 
     var settingContent: some View {
@@ -110,6 +117,17 @@ struct SettingView: View {
         Binding(
             get: { store.isLogoutAlertPresented },
             set: { store.send(.logoutAlertPresentationChanged($0)) }
+        )
+    }
+
+    var logoutErrorPresentation: Binding<Bool> {
+        Binding(
+            get: { store.logoutErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    store.send(.logoutErrorDismissed)
+                }
+            }
         )
     }
 }

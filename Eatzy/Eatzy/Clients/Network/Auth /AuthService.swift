@@ -19,4 +19,8 @@ final class AuthService {
     func login(_ request: LoginRequestDTO) async throws -> TokenResponseDTO {
         try await service.request(.login(request))
     }
+
+    func logout(_ request: LogoutRequestDTO) async throws {
+        try await service.requestWithoutResponse(.logout(request))
+    }
 }

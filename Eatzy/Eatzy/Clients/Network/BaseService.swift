@@ -53,6 +53,45 @@ class BaseService<Target: BaseTargetType> {
         }
     }
 
+    func requestWithoutResponse(_ target: Target) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            provider.request(target) { [decoder] result in
+                switch result {
+                case let .success(response):
+                    switch response.statusCode {
+                    case 200...299:
+                        continuation.resume(returning: ())
+                    case 400...499:
+                        if let errorResponse = try? decoder.decode(
+                            APIErrorResponse.self,
+                            from: response.data
+                        ) {
+                            continuation.resume(
+                                throwing: NetworkError.apiError(
+                                    code: errorResponse.code,
+                                    reason: errorResponse.reason
+                                )
+                            )
+                        } else if response.statusCode == 401 || response.statusCode == 403 {
+                            continuation.resume(throwing: NetworkError.unauthorized)
+                        } else if response.statusCode == 404 {
+                            continuation.resume(throwing: NetworkError.notFound)
+                        } else {
+                            continuation.resume(throwing: NetworkError.responseError)
+                        }
+                    case 500...599:
+                        continuation.resume(throwing: NetworkError.internalServerError)
+                    default:
+                        continuation.resume(throwing: NetworkError.responseError)
+                    }
+
+                case let .failure(error):
+                    continuation.resume(throwing: Self.map(error))
+                }
+            }
+        }
+    }
+
     private static func map<T: Decodable>(
         _ response: Response,
         decoder: JSONDecoder,

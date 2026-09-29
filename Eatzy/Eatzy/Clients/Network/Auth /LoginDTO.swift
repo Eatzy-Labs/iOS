@@ -19,3 +19,7 @@ struct TokenResponseDTO: Codable, Equatable, Sendable {
     let refreshTokenExpiresAt: String
     let tokenType: String
 }
+
+struct LogoutRequestDTO: Encodable, Equatable, Sendable {
+    let refreshToken: String
+}

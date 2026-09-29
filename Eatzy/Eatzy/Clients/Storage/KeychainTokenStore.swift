@@ -20,6 +20,10 @@ final class KeychainTokenStore: @unchecked Sendable {
         load()?.accessToken
     }
 
+    var refreshToken: String? {
+        load()?.refreshToken
+    }
+
     func save(_ tokens: TokenResponseDTO) throws {
         let data = try encoder.encode(tokens)
         let query = baseQuery

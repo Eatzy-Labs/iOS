@@ -84,6 +84,7 @@ struct MainTabFeature: Reducer {
 
         enum Delegate {
             case loginRequired
+            case logoutCompleted
         }
     }
 
@@ -271,6 +272,9 @@ struct MainTabFeature: Reducer {
 
             case .setting(.delegate(.loginRequired)):
                 return .send(.delegate(.loginRequired))
+
+            case .setting(.delegate(.logoutCompleted)):
+                return .send(.delegate(.logoutCompleted))
 
             case .setting:
                 return .none

@@ -138,6 +138,12 @@ struct RootFeature: Reducer {
                 state.route = .login
                 return .none
 
+            case .mainTab(.delegate(.logoutCompleted)):
+                state.login = LoginFeature.State()
+                state.mainTab = MainTabFeature.State(isAuthenticated: false)
+                state.route = .login
+                return .none
+
             case .mainTab:
                 return .none
             }
