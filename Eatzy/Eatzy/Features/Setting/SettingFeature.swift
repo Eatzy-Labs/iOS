@@ -14,6 +14,7 @@ struct SettingFeature: Reducer {
         var me: MeResponseDTO?
         var isProfileLoading = false
         var profileErrorMessage: String?
+        var isLogoutAlertPresented = false
 
         init(isAuthenticated: Bool, universityCode: String = "") {
             self.isAuthenticated = isAuthenticated
@@ -32,6 +33,9 @@ struct SettingFeature: Reducer {
         case profileResponse(Result<MeResponseDTO, NetworkError>)
         case backButtonTapped
         case loginButtonTapped
+        case logoutButtonTapped
+        case logoutAlertPresentationChanged(Bool)
+        case logoutConfirmed
         case profileCardTapped
         case profile(ProfileFeature.Action)
         case delegate(Delegate)
@@ -98,6 +102,18 @@ struct SettingFeature: Reducer {
 
             case .loginButtonTapped:
                 return .send(.delegate(.loginRequired))
+
+            case .logoutButtonTapped:
+                state.isLogoutAlertPresented = true
+                return .none
+
+            case let .logoutAlertPresentationChanged(isPresented):
+                state.isLogoutAlertPresented = isPresented
+                return .none
+
+            case .logoutConfirmed:
+                state.isLogoutAlertPresented = false
+                return .none
 
             case .profileCardTapped:
                 state.isProfilePresented = true

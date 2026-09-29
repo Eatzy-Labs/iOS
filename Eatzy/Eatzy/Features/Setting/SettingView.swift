@@ -22,6 +22,15 @@ struct SettingView: View {
         .task {
             await store.send(.viewAppeared).finish()
         }
+        .alert("Log out?", isPresented: logoutAlertPresentation) {
+            Button("Cancel", role: .cancel) {}
+
+            Button("Log out", role: .destructive) {
+                store.send(.logoutConfirmed)
+            }
+        } message: {
+            Text("Are you sure you want to log out?")
+        }
     }
 
     var settingContent: some View {
@@ -67,7 +76,9 @@ struct SettingView: View {
                         settingSection("ACCOUNT") {
                             SettingMenuCard(items: [
                                 .init(title: "Change Password"),
-                                .init(title: "Log Out"),
+                                .init(title: "Log Out") {
+                                    store.send(.logoutButtonTapped)
+                                },
                                 .init(title: "Delete Account", titleColor: .red500)
                             ])
                         }
@@ -93,5 +104,12 @@ struct SettingView: View {
 
             content()
         }
+    }
+
+    var logoutAlertPresentation: Binding<Bool> {
+        Binding(
+            get: { store.isLogoutAlertPresented },
+            set: { store.send(.logoutAlertPresentationChanged($0)) }
+        )
     }
 }
