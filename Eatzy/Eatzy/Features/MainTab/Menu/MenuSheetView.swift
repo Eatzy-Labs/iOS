@@ -61,21 +61,80 @@ private extension MenuSheetView {
             }
             .padding(.horizontal, 16)
 
-            ScrollView(.horizontal) {
-                LazyHStack(spacing: 12) {
-                    ForEach(Array(dish.imageNames.enumerated()), id: \.offset) { _, imageName in
-                        Image(imageName)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
+            if imageCount(for: dish) > 0 {
+                ScrollView(.horizontal) {
+                    LazyHStack(spacing: 12) {
+                        ForEach(0..<imageCount(for: dish), id: \.self) { index in
+                            dishImage(dish, at: index)
                             .frame(width: 140, height: 140)
                             .clipped()
                             .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
                     }
                 }
+                .scrollIndicators(.hidden)
+                .padding(.leading, 16)
             }
-            .scrollIndicators(.hidden)
-            .padding(.leading, 16)
         }
+    }
+
+    func imageCount(for dish: MenuSheet.Dish) -> Int {
+        max(dish.imageNames.count, dish.imageURLs.count)
+    }
+
+    @ViewBuilder
+    func dishImage(_ dish: MenuSheet.Dish, at index: Int) -> some View {
+        if dish.imageNames.indices.contains(index) {
+            Image(dish.imageNames[index])
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } else {
+            MealRemoteImage(
+                primaryURL: URL(string: dish.imageURLs[index]),
+                fallbackURL: dish.fallbackImageURLs.indices.contains(index)
+                    ? URL(string: dish.fallbackImageURLs[index])
+                    : nil
+            )
+        }
+    }
+}
+
+private struct MealRemoteImage: View {
+    let primaryURL: URL?
+    let fallbackURL: URL?
+
+    var body: some View {
+        AsyncImage(url: primaryURL) { phase in
+            switch phase {
+            case let .success(image):
+                image.resizable().aspectRatio(contentMode: .fill)
+            case .failure:
+                fallbackImage
+            case .empty:
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(.gray100)
+            @unknown default:
+                placeholder
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var fallbackImage: some View {
+        if let fallbackURL {
+            AsyncImage(url: fallbackURL) { image in
+                image.resizable().aspectRatio(contentMode: .fill)
+            } placeholder: {
+                placeholder
+            }
+        } else {
+            placeholder
+        }
+    }
+
+    private var placeholder: some View {
+        Color.gray100
     }
 }
 
