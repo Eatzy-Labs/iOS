@@ -28,7 +28,7 @@ struct RootFeature: Reducer {
     @CasePathable
     enum Action {
         case splashTask
-        case splashFinished
+        case splashFinished(isAuthenticated: Bool)
         case login(LoginFeature.Action)
         case onboarding(OnboardingFeature.Action)
         case signUp(SignUpFeature.Action)
@@ -36,6 +36,7 @@ struct RootFeature: Reducer {
     }
 
     @Dependency(\.continuousClock) private var clock
+    @Dependency(\.autoLoginClient) private var autoLoginClient
 
     nonisolated private enum CancelID: Hashable, Sendable {
         case splashDelay
@@ -62,13 +63,24 @@ struct RootFeature: Reducer {
             switch action {
             case .splashTask:
                 return .run { send in
-                    try await clock.sleep(for: .seconds(2))
-                    await send(.splashFinished)
+                    async let minimumSplashDuration: Void = clock.sleep(for: .seconds(2))
+                    async let isAuthenticated = autoLoginClient.restoreSession()
+
+                    try await minimumSplashDuration
+                    await send(
+                        .splashFinished(isAuthenticated: await isAuthenticated)
+                    )
                 }
                 .cancellable(id: CancelID.splashDelay, cancelInFlight: true)
 
-            case .splashFinished:
-                state.route = .login
+            case let .splashFinished(isAuthenticated):
+                if isAuthenticated {
+                    state.mainTab = MainTabFeature.State(isAuthenticated: true)
+                    state.route = .mainTab
+                } else {
+                    state.login = LoginFeature.State()
+                    state.route = .login
+                }
                 return .none
 
             case .login(.signUpButtonTapped):

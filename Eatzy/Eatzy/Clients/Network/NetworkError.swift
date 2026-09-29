@@ -19,6 +19,19 @@ enum NetworkError: Error, Equatable {
     case unknownError
 }
 
+extension NetworkError {
+    var isInvalidRefreshToken: Bool {
+        switch self {
+        case let .apiError(code, _):
+            return code == "AUTH_INVALID_REFRESH_TOKEN"
+        case .unauthorized:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
 extension NetworkError: LocalizedError, CustomStringConvertible {
     var errorDescription: String? { description }
 

@@ -2,6 +2,8 @@
 //  AuthService.swift
 //  Eatzy
 //
+//  Created by sun on 9/30/26.
+//
 
 import Foundation
 
@@ -22,5 +24,9 @@ final class AuthService {
 
     func logout(_ request: LogoutRequestDTO) async throws {
         try await service.requestWithoutResponse(.logout(request))
+    }
+
+    func refresh(_ request: RefreshRequestDTO) async throws -> TokenResponseDTO {
+        try await service.request(.refresh(request))
     }
 }

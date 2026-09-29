@@ -2,6 +2,8 @@
 //  AuthAPI.swift
 //  Eatzy
 //
+//  Created by sun on 9/30/26.
+//
 
 import Foundation
 import Alamofire
@@ -11,6 +13,7 @@ enum AuthAPI: BaseTargetType {
     case signUp(SignUpRequestDTO)
     case login(LoginRequestDTO)
     case logout(LogoutRequestDTO)
+    case refresh(RefreshRequestDTO)
 
     var baseURL: URL { NetworkConfiguration.baseURL }
 
@@ -22,12 +25,14 @@ enum AuthAPI: BaseTargetType {
             return "/api/v1/auth/login"
         case .logout:
             return "/api/v1/auth/logout"
+        case .refresh:
+            return "/api/v1/auth/refresh"
         }
     }
 
     var method: Moya.Method {
         switch self {
-        case .signUp, .login, .logout:
+        case .signUp, .login, .logout, .refresh:
             return .post
         }
     }
@@ -39,6 +44,8 @@ enum AuthAPI: BaseTargetType {
         case let .login(request):
             return .requestJSONEncodable(request)
         case let .logout(request):
+            return .requestJSONEncodable(request)
+        case let .refresh(request):
             return .requestJSONEncodable(request)
         }
     }
