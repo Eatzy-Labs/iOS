@@ -36,10 +36,11 @@ struct MapView: View {
                         }
                     }
                     .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
                 }
                 .scrollIndicators(.hidden)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 16)
+                .padding(.top, 12)
             }
         }
         .background(.coreWhite)

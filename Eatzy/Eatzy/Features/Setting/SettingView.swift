@@ -33,8 +33,7 @@ struct SettingView: View {
                         if store.isAuthenticated {
                             SettingProfileCard(
                                 userID: store.profile.profile.userID,
-                                university: store.profile.profile.university,
-                                imageData: store.profile.profile.imageData
+                                university: store.profile.profile.university
                             ) {
                                 store.send(.profileCardTapped)
                             }
@@ -47,7 +46,6 @@ struct SettingView: View {
 
                     settingSection("PREFERENCES") {
                         SettingMenuCard(items: [
-                            .init(title: "Language Preferences"),
                             .init(title: "Dietary Preferences")
                         ])
                     }
@@ -70,7 +68,7 @@ struct SettingView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 12)
                 .padding(.vertical, 24)
             }
         }

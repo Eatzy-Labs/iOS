@@ -69,17 +69,16 @@ struct EatzyChipButton: View {
             .foregroundStyle(state.foregroundColor)
             .padding(.leading, 12)
             .padding(.trailing, 16)
-            .padding(.vertical, 5)
-            .background(state.backgroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .frame(height: 40)
+            .background(state.backgroundColor, in: Capsule())
             .shadow(color: .black.opacity(0.15), radius: 2, x: 0, y: 2)
             .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(state.borderColor, lineWidth: 1)
+                Capsule()
+                    .strokeBorder(state.borderColor, lineWidth: 1)
             }
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(state == .selected ? .isSelected : [])
     }
 }
-

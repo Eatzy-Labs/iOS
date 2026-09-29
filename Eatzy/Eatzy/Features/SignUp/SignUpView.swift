@@ -27,5 +27,6 @@ struct SignUpView: View {
             }
         }
         .background(.coreWhite)
+        .hideKeyboardOnBackgroundTap()
     }
 }

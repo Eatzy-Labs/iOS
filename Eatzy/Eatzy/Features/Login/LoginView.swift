@@ -104,5 +104,6 @@ struct LoginView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(.coreWhite)
+        .hideKeyboardOnBackgroundTap()
     }
 }
