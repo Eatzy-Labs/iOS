@@ -21,6 +21,7 @@ struct MenuSheetView: View {
                     Text(store.detail.title)
                         .applyEatzyFont(.title_14_sb)
                         .foregroundStyle(.coreBlack)
+                        .padding(.horizontal, 16)
                         .padding(.bottom, 20)
 
                     LazyVStack(alignment: .leading, spacing: 37) {
@@ -29,7 +30,6 @@ struct MenuSheetView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 16)
                 .padding(.top, 16)
                 .padding(.bottom, 32)
             }
@@ -59,6 +59,7 @@ private extension MenuSheetView {
                     .foregroundStyle(.gray500)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(.horizontal, 16)
 
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 12) {
@@ -73,6 +74,7 @@ private extension MenuSheetView {
                 }
             }
             .scrollIndicators(.hidden)
+            .padding(.leading, 16)
         }
     }
 }
