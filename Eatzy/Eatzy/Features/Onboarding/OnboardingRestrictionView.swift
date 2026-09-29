@@ -37,7 +37,7 @@ struct OnboardingRestrictionView: View {
                         .applyEatzyFont(.button_18_m)
                         .foregroundStyle(.gray700)
 
-                    OnboardingFlowLayout(spacing: 8) {
+                    OnboardingFlowLayout(horizontalSpacing: 8, verticalSpacing: 16) {
                         ForEach(restrictions, id: \.self) { restriction in
                             EatzyButtonOption(
                                 restriction,
@@ -49,6 +49,7 @@ struct OnboardingRestrictionView: View {
                             }
                         }
                     }
+                    .padding(.horizontal, -4)
                 }
                 .padding(.top, 24)
             }

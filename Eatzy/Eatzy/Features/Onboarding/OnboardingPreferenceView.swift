@@ -79,7 +79,7 @@ struct OnboardingPreferenceView: View {
                 .applyEatzyFont(.button_18_m)
                 .foregroundStyle(.gray700)
 
-            OnboardingFlowLayout(spacing: 8) {
+            OnboardingFlowLayout(horizontalSpacing: 8, verticalSpacing: 16) {
                 ForEach(options, id: \.self) { option in
                     EatzyButtonOption(
                         option,
@@ -89,12 +89,14 @@ struct OnboardingPreferenceView: View {
                     }
                 }
             }
+            .padding(.horizontal, -4)
         }
     }
 }
 
 struct OnboardingFlowLayout: Layout {
-    let spacing: CGFloat
+    let horizontalSpacing: CGFloat
+    let verticalSpacing: CGFloat
 
     func sizeThatFits(
         proposal: ProposedViewSize,
@@ -133,11 +135,11 @@ struct OnboardingFlowLayout: Layout {
             let size = subview.sizeThatFits(.unspecified)
             if x > 0, x + size.width > maximumWidth {
                 x = 0
-                y += rowHeight + spacing
+                y += rowHeight + verticalSpacing
                 rowHeight = 0
             }
             points.append(CGPoint(x: x, y: y))
-            x += size.width + spacing
+            x += size.width + horizontalSpacing
             rowHeight = max(rowHeight, size.height)
         }
 
