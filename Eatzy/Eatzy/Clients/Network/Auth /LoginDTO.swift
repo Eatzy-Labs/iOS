@@ -2,6 +2,8 @@
 //  LoginDTO.swift
 //  Eatzy
 //
+//  Created by sun on 9/30/26.
+//
 
 import Foundation
 
@@ -21,5 +23,9 @@ struct TokenResponseDTO: Codable, Equatable, Sendable {
 }
 
 struct LogoutRequestDTO: Encodable, Equatable, Sendable {
+    let refreshToken: String
+}
+
+struct RefreshRequestDTO: Encodable, Equatable, Sendable {
     let refreshToken: String
 }
