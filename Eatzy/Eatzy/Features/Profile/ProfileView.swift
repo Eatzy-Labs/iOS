@@ -4,12 +4,10 @@
 //
 
 import ComposableArchitecture
-import PhotosUI
 import SwiftUI
 
 struct ProfileView: View {
     let store: StoreOf<ProfileFeature>
-    @State private var selectedPhotoItem: PhotosPickerItem?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,16 +19,11 @@ struct ProfileView: View {
                         Text(store.isEditing ? "EDIT" : "PROFILE")
                             .applyEatzyFont(.display_22_sb)
                             .foregroundStyle(.coreBlack)
-
-                        profileImage
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 12)
+                            .padding(.vertical, 40)
 
                         profileFields
-                            .padding(.top, 40)
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 24)
                     .padding(.bottom, 24)
                 }
                 .onChange(of: store.isCountryDropdownExpanded) { _, isExpanded in
@@ -48,16 +41,6 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.coreWhite)
         .hideKeyboardOnBackgroundTap()
-        .photosPicker(
-            isPresented: photoPickerPresentation,
-            selection: $selectedPhotoItem,
-            matching: .images
-        )
-        .task(id: selectedPhotoItem) {
-            guard let selectedPhotoItem else { return }
-            let data = try? await selectedPhotoItem.loadTransferable(type: Data.self)
-            store.send(.profileImageDataLoaded(data))
-        }
         .alert(
             "Discard changes?",
             isPresented: discardAlertPresentation
@@ -76,39 +59,6 @@ struct ProfileView: View {
 }
 
 private extension ProfileView {
-    @ViewBuilder
-    var profileImage: some View {
-        if store.isEditing {
-            Button {
-                store.send(.profileImageTapped)
-            } label: {
-                profileImageContent(fallback: .profileGray)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Select profile photo")
-        } else {
-            profileImageContent(fallback: .profile)
-        }
-    }
-
-    @ViewBuilder
-    func profileImageContent(fallback: ImageResource) -> some View {
-        if let data = displayedProfile.imageData,
-           let image = UIImage(data: data) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 120, height: 120)
-                .clipShape(Circle())
-        } else {
-            Image(fallback)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 120, height: 120)
-                .clipShape(Circle())
-        }
-    }
-
     var navigationBar: some View {
         EatzyNavigationBar(
             leading: .back {
@@ -206,6 +156,7 @@ private extension ProfileView {
                 .foregroundStyle(.gray900)
 
             content()
+                .padding(.horizontal, -4)
         }
     }
 
@@ -251,13 +202,6 @@ private extension ProfileView {
         )
     }
 
-    var photoPickerPresentation: Binding<Bool> {
-        Binding(
-            get: { store.isPhotoPickerPresented },
-            set: { store.send(.photoPickerPresentationChanged($0)) }
-        )
-    }
-
     var discardAlertPresentation: Binding<Bool> {
         Binding(
             get: { store.isDiscardAlertPresented },
@@ -273,9 +217,6 @@ private extension ProfileView {
         store.draft.country.isEmpty ? "Please Select" : store.draft.country
     }
 
-    var displayedProfile: Profile {
-        store.isEditing ? store.draft : store.profile
-    }
 }
 
 #Preview {
