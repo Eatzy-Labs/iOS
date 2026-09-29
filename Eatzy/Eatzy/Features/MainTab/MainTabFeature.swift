@@ -37,7 +37,10 @@ struct MainTabFeature: Reducer {
         init(isAuthenticated: Bool = true, universityCode: String = "knu") {
             preferredUniversityCode = universityCode
             selectedUniversityCode = universityCode
-            setting = SettingFeature.State(isAuthenticated: isAuthenticated)
+            setting = SettingFeature.State(
+                isAuthenticated: isAuthenticated,
+                universityCode: universityCode
+            )
         }
 
         var cafeterias: [CatalogCafeteriaDTO] {

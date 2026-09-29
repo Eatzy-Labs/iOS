@@ -10,12 +10,17 @@ struct SettingView: View {
     let store: StoreOf<SettingFeature>
 
     var body: some View {
-        if store.isProfilePresented {
-            ProfileView(
-                store: store.scope(state: \.profile, action: \.profile)
-            )
-        } else {
-            settingContent
+        Group {
+            if store.isProfilePresented {
+                ProfileView(
+                    store: store.scope(state: \.profile, action: \.profile)
+                )
+            } else {
+                settingContent
+            }
+        }
+        .task {
+            await store.send(.viewAppeared).finish()
         }
     }
 

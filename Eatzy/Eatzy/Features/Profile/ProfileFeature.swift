@@ -19,6 +19,8 @@ struct ProfileFeature: Reducer {
         var isPhotoPickerPresented = false
         var isCountryDropdownExpanded = false
         var isDiscardAlertPresented = false
+        var isSaving = false
+        var saveErrorMessage: String?
 
         init(
             profile: Profile = ProfileMockData.profile,
@@ -36,6 +38,8 @@ struct ProfileFeature: Reducer {
         case backButtonTapped
         case editButtonTapped
         case doneButtonTapped
+        case updateProfileResponse(Result<MeResponseDTO, NetworkError>)
+        case saveErrorDismissed
         case userIDChanged(String)
         case idFieldStateChanged(EatzyTextfield.State)
         case emailChanged(String)
@@ -58,8 +62,11 @@ struct ProfileFeature: Reducer {
 
         enum Delegate {
             case backRequested
+            case profileUpdated(MeResponseDTO)
         }
     }
+
+    @Dependency(\.usersClient) private var usersClient
 
     var body: some Reducer<State, Action> {
         Reduce { state, action in
@@ -77,6 +84,7 @@ struct ProfileFeature: Reducer {
                 return .none
 
             case .doneButtonTapped:
+                guard !state.isSaving else { return .none }
                 state.idFieldState = idValidationState(for: state.draft.userID)
                 state.emailFieldState = emailValidationState(for: state.draft.email)
 
@@ -85,8 +93,54 @@ struct ProfileFeature: Reducer {
                     return .none
                 }
 
-                state.profile = state.draft
+                state.isSaving = true
+                state.saveErrorMessage = nil
+                let request = UpdateProfileRequestDTO(
+                    nationality: OnboardingSignUpMetadata.nationalityCode(
+                        for: state.draft.country
+                    ),
+                    profileId: state.draft.userID
+                )
+                return .run { send in
+                    do {
+                        await send(
+                            .updateProfileResponse(
+                                .success(try await usersClient.updateProfile(request))
+                            )
+                        )
+                    } catch {
+                        await send(
+                            .updateProfileResponse(
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+
+            case let .updateProfileResponse(.success(response)):
+                state.isSaving = false
+                state.saveErrorMessage = nil
+                let profile = Profile(
+                    userID: response.profileId ?? response.nickname ?? response.id,
+                    email: response.email,
+                    university: state.profile.university,
+                    country: OnboardingSignUpMetadata.nationalityName(
+                        for: response.nationality
+                    ),
+                    imageData: state.profile.imageData
+                )
+                state.profile = profile
+                state.draft = profile
                 state.isEditing = false
+                return .send(.delegate(.profileUpdated(response)))
+
+            case let .updateProfileResponse(.failure(error)):
+                state.isSaving = false
+                state.saveErrorMessage = error.description
+                return .none
+
+            case .saveErrorDismissed:
+                state.saveErrorMessage = nil
                 return .none
 
             case let .userIDChanged(userID):
