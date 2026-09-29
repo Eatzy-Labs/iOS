@@ -47,6 +47,7 @@ struct ProfileView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.coreWhite)
+        .hideKeyboardOnBackgroundTap()
         .photosPicker(
             isPresented: photoPickerPresentation,
             selection: $selectedPhotoItem,
