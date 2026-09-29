@@ -102,6 +102,12 @@ struct MenuView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
+                } else if store.mealsResponse != nil {
+                    Text("No menu information yet")
+                        .applyEatzyFont(.body_16_r)
+                        .foregroundStyle(.gray900)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
                 }
             }
             .background(.gray100)
