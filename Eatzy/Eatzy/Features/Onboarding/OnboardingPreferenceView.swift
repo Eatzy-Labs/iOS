@@ -11,15 +11,6 @@ import SwiftUI
 struct OnboardingPreferenceView: View {
     let store: StoreOf<OnboardingFeature>
 
-    private let religions = [
-        "No Preference", "Muslim (Halal)", "Jewish (Kosher)",
-        "Christian", "Buddhist", "Hindu", "Sikh"
-    ]
-    private let diets = [
-        "No Preference", "Vegan", "Vegetarian", "Keto",
-        "Gluten-Free", "Dairy-Free"
-    ]
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -33,21 +24,29 @@ struct OnboardingPreferenceView: View {
                     .foregroundStyle(.coreBlack)
                     .padding(.top, 12)
 
-                optionSection(
-                    title: "Religious Preference",
-                    options: religions,
-                    selections: store.selectedReligions,
-                    action: OnboardingFeature.Action.religionTapped
-                )
-                .padding(.top, 24)
+                if store.isTaxonomyLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
+                } else if let message = store.taxonomyErrorMessage {
+                    taxonomyError(message)
+                } else {
+                    optionSection(
+                        title: "Religious Preference",
+                        options: store.religionOptions,
+                        selections: store.selectedReligions,
+                        action: OnboardingFeature.Action.religionTapped
+                    )
+                    .padding(.top, 24)
 
-                optionSection(
-                    title: "Dietary Preference",
-                    options: diets,
-                    selections: store.selectedDiets,
-                    action: OnboardingFeature.Action.dietTapped
-                )
-                .padding(.top, 40)
+                    optionSection(
+                        title: "Dietary Preference",
+                        options: store.dietOptions,
+                        selections: store.selectedDiets,
+                        action: OnboardingFeature.Action.dietTapped
+                    )
+                    .padding(.top, 40)
+                }
             }
             .padding(.horizontal, 20)
         }
@@ -70,7 +69,7 @@ struct OnboardingPreferenceView: View {
 
     private func optionSection(
         title: String,
-        options: [String],
+        options: [OnboardingFeature.Option],
         selections: Set<String>,
         action: @escaping (String) -> OnboardingFeature.Action
     ) -> some View {
@@ -80,17 +79,33 @@ struct OnboardingPreferenceView: View {
                 .foregroundStyle(.gray700)
 
             OnboardingFlowLayout(horizontalSpacing: 8, verticalSpacing: 16) {
-                ForEach(options, id: \.self) { option in
+                ForEach(options) { option in
                     EatzyButtonOption(
-                        option,
-                        state: selections.contains(option) ? .selected : .unselected
+                        option.title,
+                        state: selections.contains(option.id) ? .selected : .unselected
                     ) {
-                        store.send(action(option))
+                        store.send(action(option.id))
                     }
                 }
             }
             .padding(.horizontal, -4)
         }
+    }
+
+    private func taxonomyError(_ message: String) -> some View {
+        VStack(spacing: 12) {
+            Text(message)
+                .applyEatzyFont(.body_14_r)
+                .foregroundStyle(.gray500)
+
+            Button("Retry") {
+                store.send(.taxonomyRetryTapped)
+            }
+            .applyEatzyFont(.button_14_m)
+            .foregroundStyle(.orange500)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
     }
 }
 

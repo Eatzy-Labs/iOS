@@ -31,5 +31,8 @@ struct OnboardingView: View {
             }
         }
         .background(.coreWhite)
+        .task {
+            await store.send(.viewAppeared).finish()
+        }
     }
 }

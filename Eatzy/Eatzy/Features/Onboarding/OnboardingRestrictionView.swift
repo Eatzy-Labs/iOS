@@ -11,19 +11,6 @@ import SwiftUI
 struct OnboardingRestrictionView: View {
     let store: StoreOf<OnboardingFeature>
 
-    private let restrictions = [
-        "No Restriction",
-        "No Egg (Poultry only)", "No Milk",
-        "No Buckwheat", "No Pine Nut",
-        "No Walnut", "No Crab",
-        "No Shrimp", "No Squid",
-        "No Mackerel",
-        "No Shellfish (Oyster, Ablaone, Mussel)",
-        "No Peach", "No Tomato",
-        "No Chicken", "No Pork",
-        "No Beef", "No Sulfites / SO₂"
-    ]
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -32,26 +19,34 @@ struct OnboardingRestrictionView: View {
                     .foregroundStyle(.coreBlack)
                     .padding(.top, 24)
 
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Food Restrictions")
-                        .applyEatzyFont(.button_18_m)
-                        .foregroundStyle(.gray700)
+                if store.isTaxonomyLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
+                } else if let message = store.taxonomyErrorMessage {
+                    taxonomyError(message)
+                } else {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Food Restrictions")
+                            .applyEatzyFont(.button_18_m)
+                            .foregroundStyle(.gray700)
 
-                    OnboardingFlowLayout(horizontalSpacing: 8, verticalSpacing: 16) {
-                        ForEach(restrictions, id: \.self) { restriction in
-                            EatzyButtonOption(
-                                restriction,
-                                state: store.selectedFoodRestrictions.contains(restriction)
-                                    ? .selected
-                                    : .unselected
-                            ) {
-                                store.send(.foodRestrictionTapped(restriction))
+                        OnboardingFlowLayout(horizontalSpacing: 8, verticalSpacing: 16) {
+                            ForEach(store.restrictionOptions) { restriction in
+                                EatzyButtonOption(
+                                    restriction.title,
+                                    state: store.selectedFoodRestrictions.contains(restriction.id)
+                                        ? .selected
+                                        : .unselected
+                                ) {
+                                    store.send(.foodRestrictionTapped(restriction.id))
+                                }
                             }
                         }
+                        .padding(.horizontal, -4)
                     }
-                    .padding(.horizontal, -4)
+                    .padding(.top, 24)
                 }
-                .padding(.top, 24)
             }
             .padding(.horizontal, 20)
         }
@@ -66,5 +61,21 @@ struct OnboardingRestrictionView: View {
             .padding(.bottom, 16)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+
+    private func taxonomyError(_ message: String) -> some View {
+        VStack(spacing: 12) {
+            Text(message)
+                .applyEatzyFont(.body_14_r)
+                .foregroundStyle(.gray500)
+
+            Button("Retry") {
+                store.send(.taxonomyRetryTapped)
+            }
+            .applyEatzyFont(.button_14_m)
+            .foregroundStyle(.orange500)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
     }
 }
