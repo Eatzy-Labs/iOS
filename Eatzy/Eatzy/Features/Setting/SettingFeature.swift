@@ -14,6 +14,9 @@ struct SettingFeature: Reducer {
         var me: MeResponseDTO?
         var isProfileLoading = false
         var profileErrorMessage: String?
+        var isLogoutAlertPresented = false
+        var isLoggingOut = false
+        var logoutErrorMessage: String?
 
         init(isAuthenticated: Bool, universityCode: String = "") {
             self.isAuthenticated = isAuthenticated
@@ -32,6 +35,11 @@ struct SettingFeature: Reducer {
         case profileResponse(Result<MeResponseDTO, NetworkError>)
         case backButtonTapped
         case loginButtonTapped
+        case logoutButtonTapped
+        case logoutAlertPresentationChanged(Bool)
+        case logoutConfirmed
+        case logoutResponse(Result<Void, NetworkError>)
+        case logoutErrorDismissed
         case profileCardTapped
         case profile(ProfileFeature.Action)
         case delegate(Delegate)
@@ -39,10 +47,12 @@ struct SettingFeature: Reducer {
         enum Delegate {
             case backRequested
             case loginRequired
+            case logoutCompleted
         }
     }
 
     @Dependency(\.usersClient) private var usersClient
+    @Dependency(\.logoutClient) private var logoutClient
 
     var body: some Reducer<State, Action> {
         Scope(state: \.profile, action: \.profile) {
@@ -98,6 +108,45 @@ struct SettingFeature: Reducer {
 
             case .loginButtonTapped:
                 return .send(.delegate(.loginRequired))
+
+            case .logoutButtonTapped:
+                state.isLogoutAlertPresented = true
+                return .none
+
+            case let .logoutAlertPresentationChanged(isPresented):
+                state.isLogoutAlertPresented = isPresented
+                return .none
+
+            case .logoutConfirmed:
+                state.isLogoutAlertPresented = false
+                guard !state.isLoggingOut else { return .none }
+                state.isLoggingOut = true
+                state.logoutErrorMessage = nil
+                return .run { send in
+                    do {
+                        try await logoutClient.logout()
+                        await send(.logoutResponse(.success(())))
+                    } catch {
+                        await send(
+                            .logoutResponse(
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+
+            case .logoutResponse(.success):
+                state.isLoggingOut = false
+                return .send(.delegate(.logoutCompleted))
+
+            case let .logoutResponse(.failure(error)):
+                state.isLoggingOut = false
+                state.logoutErrorMessage = error.description
+                return .none
+
+            case .logoutErrorDismissed:
+                state.logoutErrorMessage = nil
+                return .none
 
             case .profileCardTapped:
                 state.isProfilePresented = true

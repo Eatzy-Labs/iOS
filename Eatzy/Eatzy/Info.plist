@@ -24,7 +24,6 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NMFNcpKeyId</key>
 	<string>$(NAVER_MAP_CLIENT_ID)</string>
-	<!-- 개발 서버가 HTTP를 사용 중입니다. HTTPS 전환 후 이 예외를 제거해야 합니다. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
