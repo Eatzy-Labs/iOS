@@ -10,7 +10,9 @@ struct SettingFeature: Reducer {
     struct State: Equatable {
         var isAuthenticated: Bool
         var isProfilePresented = false
+        var isDietaryPreferencePresented = false
         var profile: ProfileFeature.State
+        var dietaryPreference = DietaryPreferenceFeature.State()
         var me: MeResponseDTO?
         var isProfileLoading = false
         var profileErrorMessage: String?
@@ -41,7 +43,9 @@ struct SettingFeature: Reducer {
         case logoutResponse(Result<Void, NetworkError>)
         case logoutErrorDismissed
         case profileCardTapped
+        case dietaryPreferenceTapped
         case profile(ProfileFeature.Action)
+        case dietaryPreference(DietaryPreferenceFeature.Action)
         case delegate(Delegate)
 
         enum Delegate {
@@ -57,6 +61,10 @@ struct SettingFeature: Reducer {
     var body: some Reducer<State, Action> {
         Scope(state: \.profile, action: \.profile) {
             ProfileFeature()
+        }
+
+        Scope(state: \.dietaryPreference, action: \.dietaryPreference) {
+            DietaryPreferenceFeature()
         }
 
         Reduce { state, action in
@@ -152,6 +160,10 @@ struct SettingFeature: Reducer {
                 state.isProfilePresented = true
                 return .none
 
+            case .dietaryPreferenceTapped:
+                state.isDietaryPreferencePresented = true
+                return .none
+
             case .profile(.delegate(.backRequested)):
                 state.isProfilePresented = false
                 return .none
@@ -161,6 +173,13 @@ struct SettingFeature: Reducer {
                 return .none
 
             case .profile:
+                return .none
+
+            case .dietaryPreference(.delegate(.backRequested)):
+                state.isDietaryPreferencePresented = false
+                return .none
+
+            case .dietaryPreference:
                 return .none
 
             case .delegate:

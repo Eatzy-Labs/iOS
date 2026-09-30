@@ -15,6 +15,13 @@ struct SettingView: View {
                 ProfileView(
                     store: store.scope(state: \.profile, action: \.profile)
                 )
+            } else if store.isDietaryPreferencePresented {
+                DietaryPreferenceView(
+                    store: store.scope(
+                        state: \.dietaryPreference,
+                        action: \.dietaryPreference
+                    )
+                )
             } else {
                 settingContent
             }
@@ -67,7 +74,9 @@ struct SettingView: View {
 
                     settingSection("PREFERENCES") {
                         SettingMenuCard(items: [
-                            .init(title: "Dietary Preferences")
+                            .init(title: "Dietary Preferences") {
+                                store.send(.dietaryPreferenceTapped)
+                            }
                         ])
                     }
 
