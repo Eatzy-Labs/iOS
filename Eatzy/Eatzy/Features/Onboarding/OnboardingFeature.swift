@@ -62,6 +62,21 @@ struct OnboardingFeature: Reducer {
                 } ?? [])
         }
 
+        var dietaryProfile: DietaryProfileDTO {
+            DietaryProfileDTO(
+                avoidedIngredients: selectedFoodRestrictions
+                    .filter { $0 != Self.noneCode }
+                    .sorted(),
+                diets: selectedDiets
+                    .filter { $0 != Self.noneCode }
+                    .sorted(),
+                maxSpiceLevel: taxonomy?.spiceScale.max,
+                religion: selectedReligions.first.flatMap {
+                    $0 == Self.noneCode ? nil : $0
+                }
+            )
+        }
+
         fileprivate static let noneCode = "NONE"
     }
 
