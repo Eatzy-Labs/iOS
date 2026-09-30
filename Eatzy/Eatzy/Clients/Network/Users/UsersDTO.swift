@@ -35,3 +35,10 @@ struct UpdateProfileRequestDTO: Encodable, Equatable, Sendable {
         self.profileId = profileId
     }
 }
+
+struct DietaryProfileDTO: Codable, Equatable, Sendable {
+    let avoidedIngredients: [String]
+    let diets: [String]
+    let maxSpiceLevel: Int?
+    let religion: String?
+}

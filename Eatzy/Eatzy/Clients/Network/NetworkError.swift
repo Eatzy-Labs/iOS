@@ -49,6 +49,8 @@ extension NetworkError: LocalizedError, CustomStringConvertible {
                 return "The email or password is incorrect."
             case "AUTH_WEAK_PASSWORD":
                 return weakPasswordMessage
+            case "DIETARY_INVALID_CODE":
+                return "One or more dietary selections are no longer supported."
             default:
                 return "The request could not be completed. (\(code))"
             }

@@ -122,7 +122,8 @@ struct RootFeature: Reducer {
                 }
                 state.signUp = SignUpFeature.State(
                     universityCode: universityCode,
-                    nationality: nationality
+                    nationality: nationality,
+                    dietaryProfile: state.onboarding.dietaryProfile
                 )
                 state.route = .signUp
                 return .none

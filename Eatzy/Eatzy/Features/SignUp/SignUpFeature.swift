@@ -27,6 +27,8 @@ struct SignUpFeature: Reducer {
         var nationality = ""
         var preferredLanguage = "en"
         var termsAgreed = true
+        var dietaryProfile: DietaryProfileDTO?
+        var hasAuthenticatedAccount = false
         var isLoading = false
         var errorMessage: String?
 
@@ -57,6 +59,7 @@ struct SignUpFeature: Reducer {
         case continueButtonTapped
         case signUpResponse(Result<SignUpResponseDTO, NetworkError>)
         case loginResponse(Result<Void, NetworkError>)
+        case dietaryProfileResponse(Result<DietaryProfileDTO, NetworkError>)
         case backButtonTapped
         case delegate(Delegate)
 
@@ -68,6 +71,7 @@ struct SignUpFeature: Reducer {
 
     @Dependency(\.signUpClient) private var signUpClient
     @Dependency(\.loginClient) private var loginClient
+    @Dependency(\.dietaryProfileClient) private var dietaryProfileClient
 
     var body: some Reducer<State, Action> {
         Reduce { state, action in
@@ -120,6 +124,9 @@ struct SignUpFeature: Reducer {
                 case .password where state.canCompleteSignUp:
                     state.isLoading = true
                     state.errorMessage = nil
+                    if state.hasAuthenticatedAccount, let dietaryProfile = state.dietaryProfile {
+                        return replaceDietaryProfile(dietaryProfile)
+                    }
                     let request = SignUpRequestDTO(
                         email: state.email,
                         nationality: state.nationality,
@@ -177,16 +184,46 @@ struct SignUpFeature: Reducer {
                 return .none
 
             case .loginResponse(.success):
-                state.isLoading = false
-                return .send(.delegate(.signUpCompleted))
+                state.hasAuthenticatedAccount = true
+                guard let dietaryProfile = state.dietaryProfile else {
+                    state.isLoading = false
+                    return .send(.delegate(.signUpCompleted))
+                }
+                return replaceDietaryProfile(dietaryProfile)
 
             case let .loginResponse(.failure(error)):
                 state.isLoading = false
                 state.errorMessage = "Account created, but login failed. \(error.description)"
                 return .none
 
+            case .dietaryProfileResponse(.success):
+                state.isLoading = false
+                return .send(.delegate(.signUpCompleted))
+
+            case let .dietaryProfileResponse(.failure(error)):
+                state.isLoading = false
+                state.errorMessage = "Account created, but dietary preferences could not be saved. \(error.description)"
+                return .none
+
             case .delegate:
                 return .none
+            }
+        }
+    }
+
+    private func replaceDietaryProfile(
+        _ dietaryProfile: DietaryProfileDTO
+    ) -> Effect<Action> {
+        .run { send in
+            do {
+                let response = try await dietaryProfileClient.replace(dietaryProfile)
+                await send(.dietaryProfileResponse(.success(response)))
+            } catch {
+                await send(
+                    .dietaryProfileResponse(
+                        .failure(error as? NetworkError ?? .unknownError)
+                    )
+                )
             }
         }
     }

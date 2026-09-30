@@ -8,6 +8,11 @@
 import ComposableArchitecture
 
 struct OnboardingFeature: Reducer {
+    struct Option: Equatable, Identifiable {
+        let id: String
+        let title: String
+    }
+
     @ObservableState
     struct State: Equatable {
         enum EntryPoint: Equatable {
@@ -36,9 +41,49 @@ struct OnboardingFeature: Reducer {
         var selectedReligions: Set<String> = []
         var selectedDiets: Set<String> = []
         var selectedFoodRestrictions: Set<String> = []
+        var taxonomy: DietaryTaxonomyResponseDTO?
+        var isTaxonomyLoading = false
+        var taxonomyErrorMessage: String?
+
+        var religionOptions: [Option] {
+            [Option(id: Self.noneCode, title: "No Preference")] +
+                (taxonomy?.religions.map { Option(id: $0.code, title: $0.nameEn) } ?? [])
+        }
+
+        var dietOptions: [Option] {
+            [Option(id: Self.noneCode, title: "No Preference")] +
+                (taxonomy?.diets.map { Option(id: $0.code, title: $0.nameEn) } ?? [])
+        }
+
+        var restrictionOptions: [Option] {
+            [Option(id: Self.noneCode, title: "No Restriction")] +
+                (taxonomy?.ingredients.map {
+                    Option(id: $0.code, title: "No \($0.nameEn)")
+                } ?? [])
+        }
+
+        var dietaryProfile: DietaryProfileDTO {
+            DietaryProfileDTO(
+                avoidedIngredients: selectedFoodRestrictions
+                    .filter { $0 != Self.noneCode }
+                    .sorted(),
+                diets: selectedDiets
+                    .filter { $0 != Self.noneCode }
+                    .sorted(),
+                maxSpiceLevel: taxonomy?.spiceScale.max,
+                religion: selectedReligions.first.flatMap {
+                    $0 == Self.noneCode ? nil : $0
+                }
+            )
+        }
+
+        fileprivate static let noneCode = "NONE"
     }
 
     enum Action {
+        case viewAppeared
+        case taxonomyRetryTapped
+        case taxonomyResponse(Result<DietaryTaxonomyResponseDTO, NetworkError>)
         case universitySelectionChanged(Set<String>)
         case countrySelectionChanged(Set<String>)
         case religionTapped(String)
@@ -54,9 +99,49 @@ struct OnboardingFeature: Reducer {
         }
     }
 
+    @Dependency(\.dietaryClient) private var dietaryClient
+
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
+            case .viewAppeared:
+                guard state.taxonomy == nil, !state.isTaxonomyLoading else {
+                    return .none
+                }
+                state.isTaxonomyLoading = true
+                state.taxonomyErrorMessage = nil
+                return .run { send in
+                    do {
+                        await send(
+                            .taxonomyResponse(
+                                .success(try await dietaryClient.fetchTaxonomy())
+                            )
+                        )
+                    } catch {
+                        await send(
+                            .taxonomyResponse(
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+
+            case .taxonomyRetryTapped:
+                state.taxonomy = nil
+                state.isTaxonomyLoading = false
+                return .send(.viewAppeared)
+
+            case let .taxonomyResponse(.success(response)):
+                state.isTaxonomyLoading = false
+                state.taxonomyErrorMessage = nil
+                state.taxonomy = response
+                return .none
+
+            case let .taxonomyResponse(.failure(error)):
+                state.isTaxonomyLoading = false
+                state.taxonomyErrorMessage = error.description
+                return .none
+
             case let .universitySelectionChanged(selection):
                 state.selectedUniversity = singleSelection(
                     from: selection,
@@ -72,11 +157,11 @@ struct OnboardingFeature: Reducer {
                 return .none
 
             case let .religionTapped(religion):
-                toggle(religion, in: &state.selectedReligions)
+                selectSingleOption(religion, in: &state.selectedReligions)
                 return .none
 
             case let .dietTapped(diet):
-                toggle(diet, in: &state.selectedDiets)
+                toggleExclusiveOption(diet, in: &state.selectedDiets)
                 return .none
 
             case let .foodRestrictionTapped(restriction):
@@ -139,12 +224,32 @@ struct OnboardingFeature: Reducer {
         _ restriction: String,
         in selection: inout Set<String>
     ) {
-        if restriction == "No Restriction" {
+        if restriction == State.noneCode {
             selection = selection.contains(restriction) ? [] : [restriction]
             return
         }
 
-        selection.remove("No Restriction")
+        selection.remove(State.noneCode)
         toggle(restriction, in: &selection)
+    }
+
+    private func selectSingleOption(
+        _ option: String,
+        in selection: inout Set<String>
+    ) {
+        selection = selection.contains(option) ? [] : [option]
+    }
+
+    private func toggleExclusiveOption(
+        _ option: String,
+        in selection: inout Set<String>
+    ) {
+        if option == State.noneCode {
+            selection = selection.contains(option) ? [] : [option]
+            return
+        }
+
+        selection.remove(State.noneCode)
+        toggle(option, in: &selection)
     }
 }
