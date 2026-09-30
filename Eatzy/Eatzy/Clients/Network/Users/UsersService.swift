@@ -21,4 +21,8 @@ final class UsersService {
     func replaceDietaryProfile(_ request: DietaryProfileDTO) async throws -> DietaryProfileDTO {
         try await service.request(.replaceDietaryProfile(request))
     }
+
+    func fetchDietaryProfile() async throws -> DietaryProfileDTO {
+        try await service.request(.dietaryProfile)
+    }
 }
