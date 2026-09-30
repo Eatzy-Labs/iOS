@@ -37,7 +37,7 @@ struct DietaryPreferenceView: View {
                     }
                     .padding(.top, 20)
 
-                    if store.isLoading {
+                    if store.isLoading || store.isProfileLoading {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                             .padding(.top, 42)

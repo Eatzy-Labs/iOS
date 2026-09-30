@@ -12,7 +12,7 @@ struct SettingFeature: Reducer {
         var isProfilePresented = false
         var isDietaryPreferencePresented = false
         var profile: ProfileFeature.State
-        var dietaryPreference = DietaryPreferenceFeature.State()
+        var dietaryPreference: DietaryPreferenceFeature.State
         var me: MeResponseDTO?
         var isProfileLoading = false
         var profileErrorMessage: String?
@@ -28,6 +28,9 @@ struct SettingFeature: Reducer {
                 initialProfile.university = universityCode.uppercased()
             }
             profile = ProfileFeature.State(profile: initialProfile)
+            dietaryPreference = DietaryPreferenceFeature.State(
+                isAuthenticated: isAuthenticated
+            )
         }
     }
 
