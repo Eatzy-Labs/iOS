@@ -13,4 +13,8 @@ final class CatalogService {
     func fetchCatalog(language: String) async throws -> CatalogResponseDTO {
         try await service.request(.catalog(language: language))
     }
+
+    func fetchUniversities() async throws -> UniversitiesResponseDTO {
+        try await service.request(.universities)
+    }
 }
