@@ -37,11 +37,11 @@ struct SignUpFeature: Reducer {
         }
 
         var showsPasswordConfirmation: Bool {
-            !password.isEmpty
+            passwordFieldState == .success
         }
 
         var canCompleteSignUp: Bool {
-            !password.isEmpty
+            passwordFieldState == .success
                 && password == confirmedPassword
                 && !universityCode.isEmpty
                 && !nationality.isEmpty
@@ -54,6 +54,7 @@ struct SignUpFeature: Reducer {
         case emailFieldStateChanged(EatzyTextfield.State)
         case passwordChanged(String)
         case passwordFieldStateChanged(EatzyTextfield.State)
+        case passwordSubmitted
         case confirmedPasswordChanged(String)
         case confirmedPasswordFieldStateChanged(EatzyTextfield.State)
         case continueButtonTapped
@@ -95,16 +96,26 @@ struct SignUpFeature: Reducer {
             case let .passwordChanged(password):
                 state.password = password
                 state.errorMessage = nil
-                state.passwordFieldState = password.isEmpty ? .placeholder : .filled
+                state.passwordFieldState = password.isEmpty ? .placeholder : .writing
 
-                if password.isEmpty {
-                    state.confirmedPassword = ""
-                    state.confirmedPasswordFieldState = .placeholder
-                }
+                state.confirmedPassword = ""
+                state.confirmedPasswordFieldState = .placeholder
                 return .none
 
             case let .passwordFieldStateChanged(fieldState):
                 state.passwordFieldState = fieldState
+                return .none
+
+            case .passwordSubmitted:
+                if !(10...14).contains(state.password.count) {
+                    state.passwordFieldState = .error(message: "Use 10–14 characters")
+                } else if !state.password.hasRequiredPasswordCharacters {
+                    state.passwordFieldState = .error(
+                        message: "Include at least one letter, number, and special character"
+                    )
+                } else {
+                    state.passwordFieldState = .success
+                }
                 return .none
 
             case let .confirmedPasswordChanged(password):
@@ -227,4 +238,5 @@ struct SignUpFeature: Reducer {
             }
         }
     }
+
 }
