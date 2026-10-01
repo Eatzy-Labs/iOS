@@ -8,6 +8,7 @@ import ComposableArchitecture
 struct UsersClient {
     var fetchMe: @Sendable () async throws -> MeResponseDTO
     var updateProfile: @Sendable (UpdateProfileRequestDTO) async throws -> MeResponseDTO
+    var changePassword: @Sendable (ChangePasswordRequestDTO) async throws -> Void
 }
 
 extension UsersClient: DependencyKey {
@@ -17,6 +18,9 @@ extension UsersClient: DependencyKey {
         },
         updateProfile: { request in
             try await UsersService().updateProfile(request)
+        },
+        changePassword: { request in
+            try await UsersService().changePassword(request)
         }
     )
 
@@ -26,6 +30,8 @@ extension UsersClient: DependencyKey {
         },
         updateProfile: { _ in
             testResponse
+        },
+        changePassword: { _ in
         }
     )
 

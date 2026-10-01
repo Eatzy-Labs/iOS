@@ -36,6 +36,11 @@ struct UpdateProfileRequestDTO: Encodable, Equatable, Sendable {
     }
 }
 
+struct ChangePasswordRequestDTO: Encodable, Equatable, Sendable {
+    let currentPassword: String
+    let newPassword: String
+}
+
 struct DietaryProfileDTO: Codable, Equatable, Sendable {
     let avoidedIngredients: [String]
     let diets: [String]
