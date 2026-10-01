@@ -25,6 +25,7 @@ struct DietaryPreferenceView: View {
                         .applyEatzyFont(.display_22_sb)
                         .foregroundStyle(.coreBlack)
                         .padding(.top, 24)
+                        .padding(.horizontal, 20)
 
                     HStack(spacing: 8) {
                         Text("Show on menu")
@@ -36,6 +37,7 @@ struct DietaryPreferenceView: View {
                         EatzyToggle(isOn: showsOnMenu)
                     }
                     .padding(.top, 20)
+                    .padding(.horizontal, 20)
 
                     if store.isLoading || store.isProfileLoading {
                         ProgressView()
@@ -47,7 +49,6 @@ struct DietaryPreferenceView: View {
                         preferenceContent
                     }
                 }
-                .padding(.horizontal, 20)
                 .padding(.bottom, 24)
             }
         }
@@ -70,6 +71,7 @@ private extension DietaryPreferenceView {
                 optionTitle: { religionName(for: $0) }
             )
             .padding(.top, 42)
+            .padding(.horizontal, 20)
 
             dropdownSection(
                 title: "Dietary Preference",
@@ -79,11 +81,13 @@ private extension DietaryPreferenceView {
                 optionTitle: { dietName(for: $0) }
             )
             .padding(.top, 40)
+            .padding(.horizontal, 20)
 
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("Dietary Preference")
                     .applyEatzyFont(.display_16_sb)
                     .foregroundStyle(.gray900)
+                    .padding(.horizontal, 20)
 
                 OnboardingFlowLayout(horizontalSpacing: 8, verticalSpacing: 16) {
                     noRestrictionButton
@@ -99,6 +103,8 @@ private extension DietaryPreferenceView {
                         }
                     }
                 }
+                .padding(.top, 20)
+                .padding(.horizontal, 16)
             }
             .padding(.top, 40)
         }

@@ -58,7 +58,10 @@ struct OnboardingPreferenceView: View {
                 store.send(.continueButtonTapped)
             }
             .padding(.horizontal, 20)
+            .padding(.top, 20)
             .padding(.bottom, 16)
+            .frame(maxWidth: .infinity)
+            .background(.coreWhite)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }
@@ -129,9 +132,10 @@ struct OnboardingFlowLayout: Layout {
     ) {
         let result = layout(proposal: proposal, subviews: subviews)
         for (index, point) in result.points.enumerated() {
+            let size = result.sizes[index]
             subviews[index].place(
                 at: CGPoint(x: bounds.minX + point.x, y: bounds.minY + point.y),
-                proposal: .unspecified
+                proposal: ProposedViewSize(width: size.width, height: size.height)
             )
         }
     }
@@ -139,15 +143,17 @@ struct OnboardingFlowLayout: Layout {
     private func layout(
         proposal: ProposedViewSize,
         subviews: Subviews
-    ) -> (size: CGSize, points: [CGPoint]) {
+    ) -> (size: CGSize, points: [CGPoint], sizes: [CGSize]) {
         let maximumWidth = proposal.width ?? .infinity
         var points: [CGPoint] = []
+        var sizes: [CGSize] = []
         var x: CGFloat = 0
         var y: CGFloat = 0
         var rowHeight: CGFloat = 0
 
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
+            sizes.append(size)
             if x > 0, x + size.width > maximumWidth {
                 x = 0
                 y += rowHeight + verticalSpacing
@@ -160,7 +166,8 @@ struct OnboardingFlowLayout: Layout {
 
         return (
             CGSize(width: proposal.width ?? x, height: y + rowHeight),
-            points
+            points,
+            sizes
         )
     }
 }
