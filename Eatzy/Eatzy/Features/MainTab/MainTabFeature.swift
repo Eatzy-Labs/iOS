@@ -27,7 +27,6 @@ struct MainTabFeature: Reducer {
         var mealsResponse: MealsResponseDTO?
         var isMealsLoading = false
         var mealsErrorMessage: String?
-        var selectedMenuSectionID: String?
         var isMenuSheetPresented = false
         var menuSheet = MenuSheetFeature.State()
         var isSettingPresented = false
@@ -73,7 +72,6 @@ struct MainTabFeature: Reducer {
         )
         case dateSelected(Date)
         case cafeteriaSelected(String)
-        case menuSectionSelectionChanged(String?)
         case menuSectionTapped(String)
         case menuSheetPresentationChanged(Bool)
         case menuSheet(MenuSheetFeature.Action)
@@ -222,17 +220,11 @@ struct MainTabFeature: Reducer {
 
             case let .dateSelected(date):
                 state.selectedDate = date
-                resetMenuSelections(&state)
                 return .send(.loadMeals)
 
             case let .cafeteriaSelected(cafeteria):
                 state.selectedCafeteriaCode = cafeteria
-                resetMenuSelections(&state)
                 return .send(.loadMeals)
-
-            case let .menuSectionSelectionChanged(sectionID):
-                state.selectedMenuSectionID = sectionID
-                return .none
 
             case let .menuSectionTapped(sectionID):
                 guard let detail = MealsPresentation.sheet(
@@ -283,10 +275,6 @@ struct MainTabFeature: Reducer {
                 return .none
             }
         }
-    }
-
-    private func resetMenuSelections(_ state: inout State) {
-        state.selectedMenuSectionID = nil
     }
 
     private static func dateString(from date: Date) -> String {

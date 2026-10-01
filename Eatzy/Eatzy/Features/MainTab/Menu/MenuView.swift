@@ -77,8 +77,7 @@ struct MenuView: View {
                             mealSection(
                                 title: "BREAKFAST",
                                 color: .yellow500,
-                                sections: breakfastSections,
-                                selection: selectedMenuSectionID
+                                sections: breakfastSections
                             )
                         }
 
@@ -86,8 +85,7 @@ struct MenuView: View {
                             mealSection(
                                 title: "LUNCH",
                                 color: .blue500,
-                                sections: lunchSections,
-                                selection: selectedMenuSectionID
+                                sections: lunchSections
                             )
                         }
 
@@ -95,8 +93,7 @@ struct MenuView: View {
                             mealSection(
                                 title: "DINNER",
                                 color: .purple500,
-                                sections: dinnerSections,
-                                selection: selectedMenuSectionID
+                                sections: dinnerSections
                             )
                         }
                     }
@@ -147,13 +144,6 @@ private extension MenuView {
         store.cafeterias.first(where: { $0.code == code })?.tabTitle ?? code
     }
 
-    var selectedMenuSectionID: Binding<String?> {
-        Binding(
-            get: { store.selectedMenuSectionID },
-            set: { store.send(.menuSectionSelectionChanged($0)) }
-        )
-    }
-
     var menuSheetPresentation: Binding<Bool> {
         Binding(
             get: { store.isMenuSheetPresented },
@@ -164,8 +154,7 @@ private extension MenuView {
     func mealSection(
         title: String,
         color: Color,
-        sections: [EatzyCardMenu.Section],
-        selection: Binding<String?>
+        sections: [EatzyCardMenu.Section]
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -175,7 +164,6 @@ private extension MenuView {
 
             EatzyCardMenu(
                 sections: sections,
-                selectedSectionID: selection,
                 onSelect: { section in
                     store.send(.menuSectionTapped(section.id))
                 }
