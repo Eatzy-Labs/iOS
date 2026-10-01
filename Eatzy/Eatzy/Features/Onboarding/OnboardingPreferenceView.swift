@@ -152,7 +152,10 @@ struct OnboardingFlowLayout: Layout {
         var rowHeight: CGFloat = 0
 
         for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
+            let intrinsicSize = subview.sizeThatFits(.unspecified)
+            let size = subview.sizeThatFits(
+                ProposedViewSize(width: intrinsicSize.width, height: nil)
+            )
             sizes.append(size)
             if x > 0, x + size.width > maximumWidth {
                 x = 0
