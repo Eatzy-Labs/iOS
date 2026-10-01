@@ -21,6 +21,7 @@ struct SignUpFeature: Reducer {
         var emailFieldState = EatzyTextfield.State.placeholder
         var password = ""
         var passwordFieldState = EatzyTextfield.State.placeholder
+        var isPasswordValidated = false
         var confirmedPassword = ""
         var confirmedPasswordFieldState = EatzyTextfield.State.placeholder
         var universityCode = ""
@@ -37,11 +38,11 @@ struct SignUpFeature: Reducer {
         }
 
         var showsPasswordConfirmation: Bool {
-            passwordFieldState == .success
+            isPasswordValidated
         }
 
         var canCompleteSignUp: Bool {
-            passwordFieldState == .success
+            isPasswordValidated
                 && password == confirmedPassword
                 && !universityCode.isEmpty
                 && !nationality.isEmpty
@@ -96,6 +97,7 @@ struct SignUpFeature: Reducer {
             case let .passwordChanged(password):
                 state.password = password
                 state.errorMessage = nil
+                state.isPasswordValidated = false
                 state.passwordFieldState = password.isEmpty ? .placeholder : .writing
 
                 state.confirmedPassword = ""
@@ -108,13 +110,16 @@ struct SignUpFeature: Reducer {
 
             case .passwordSubmitted:
                 if !(10...14).contains(state.password.count) {
+                    state.isPasswordValidated = false
                     state.passwordFieldState = .error(message: "Use 10–14 characters")
                 } else if !state.password.hasRequiredPasswordCharacters {
+                    state.isPasswordValidated = false
                     state.passwordFieldState = .error(
                         message: "Include at least one letter, number, and special character"
                     )
                 } else {
-                    state.passwordFieldState = .success
+                    state.isPasswordValidated = true
+                    state.passwordFieldState = .filled
                 }
                 return .none
 
