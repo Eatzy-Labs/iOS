@@ -21,6 +21,7 @@ struct SignUpFeature: Reducer {
         var emailFieldState = EatzyTextfield.State.placeholder
         var password = ""
         var passwordFieldState = EatzyTextfield.State.placeholder
+        var isPasswordValidated = false
         var confirmedPassword = ""
         var confirmedPasswordFieldState = EatzyTextfield.State.placeholder
         var universityCode = ""
@@ -37,11 +38,11 @@ struct SignUpFeature: Reducer {
         }
 
         var showsPasswordConfirmation: Bool {
-            !password.isEmpty
+            isPasswordValidated
         }
 
         var canCompleteSignUp: Bool {
-            !password.isEmpty
+            isPasswordValidated
                 && password == confirmedPassword
                 && !universityCode.isEmpty
                 && !nationality.isEmpty
@@ -54,6 +55,7 @@ struct SignUpFeature: Reducer {
         case emailFieldStateChanged(EatzyTextfield.State)
         case passwordChanged(String)
         case passwordFieldStateChanged(EatzyTextfield.State)
+        case passwordSubmitted
         case confirmedPasswordChanged(String)
         case confirmedPasswordFieldStateChanged(EatzyTextfield.State)
         case continueButtonTapped
@@ -95,16 +97,30 @@ struct SignUpFeature: Reducer {
             case let .passwordChanged(password):
                 state.password = password
                 state.errorMessage = nil
-                state.passwordFieldState = password.isEmpty ? .placeholder : .filled
+                state.isPasswordValidated = false
+                state.passwordFieldState = password.isEmpty ? .placeholder : .writing
 
-                if password.isEmpty {
-                    state.confirmedPassword = ""
-                    state.confirmedPasswordFieldState = .placeholder
-                }
+                state.confirmedPassword = ""
+                state.confirmedPasswordFieldState = .placeholder
                 return .none
 
             case let .passwordFieldStateChanged(fieldState):
                 state.passwordFieldState = fieldState
+                return .none
+
+            case .passwordSubmitted:
+                if !(10...14).contains(state.password.count) {
+                    state.isPasswordValidated = false
+                    state.passwordFieldState = .error(message: "Use 10–14 characters")
+                } else if !state.password.hasRequiredPasswordCharacters {
+                    state.isPasswordValidated = false
+                    state.passwordFieldState = .error(
+                        message: "Include at least one letter, number, and special character"
+                    )
+                } else {
+                    state.isPasswordValidated = true
+                    state.passwordFieldState = .filled
+                }
                 return .none
 
             case let .confirmedPasswordChanged(password):
@@ -227,4 +243,5 @@ struct SignUpFeature: Reducer {
             }
         }
     }
+
 }

@@ -20,6 +20,7 @@ struct EatzyTextfield: View {
     private let showsCounter: Bool
     private let showsErrorIcon: Bool
     private let keyboardType: UIKeyboardType
+    private let onSubmit: () -> Void
 
     @Binding private var text: String
     @Binding private var state: State
@@ -32,7 +33,8 @@ struct EatzyTextfield: View {
         isSecure: Bool = false,
         showsCounter: Bool = true,
         showsErrorIcon: Bool = true,
-        keyboardType: UIKeyboardType = .default
+        keyboardType: UIKeyboardType = .default,
+        onSubmit: @escaping () -> Void = {}
     ) {
         self._text = text
         self._state = state
@@ -42,6 +44,7 @@ struct EatzyTextfield: View {
         self.showsCounter = showsCounter
         self.showsErrorIcon = showsErrorIcon
         self.keyboardType = keyboardType
+        self.onSubmit = onSubmit
     }
 
     var body: some View {
@@ -70,6 +73,7 @@ private extension EatzyTextfield {
                 }
 
                 inputControl
+                    .onSubmit(onSubmit)
                     .applyEatzyFont(.body_16_m)
                     .foregroundStyle(.gray900)
             }

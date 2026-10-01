@@ -31,7 +31,10 @@ struct SignUpPasswordView: View {
                     placeholder: "Type here",
                     maximumLength: 64,
                     isSecure: true,
-                    showsCounter: false
+                    showsCounter: false,
+                    onSubmit: {
+                        store.send(.passwordSubmitted)
+                    }
                 )
                 .padding(.top, 32)
 
