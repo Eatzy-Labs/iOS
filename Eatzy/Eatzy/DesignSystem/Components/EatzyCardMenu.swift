@@ -38,15 +38,11 @@ struct EatzyCardMenu: View {
     private let sections: [Section]
     private let onSelect: (Section) -> Void
 
-    @Binding private var selectedSectionID: String?
-
     init(
         sections: [Section],
-        selectedSectionID: Binding<String?>,
         onSelect: @escaping (Section) -> Void = { _ in }
     ) {
         self.sections = sections
-        self._selectedSectionID = selectedSectionID
         self.onSelect = onSelect
     }
 
@@ -66,10 +62,7 @@ struct EatzyCardMenu: View {
 
 private extension EatzyCardMenu {
     func sectionButton(_ section: Section) -> some View {
-        let isSelected = selectedSectionID == section.id
-
-        return Button {
-            selectedSectionID = section.id
+        Button {
             onSelect(section)
         } label: {
             VStack(alignment: .leading, spacing: 4) {
@@ -84,12 +77,9 @@ private extension EatzyCardMenu {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .background(isSelected ? Color.gray100 : Color.coreWhite)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .buttonStyle(EatzyCardMenuPressStyle())
     }
 
     func titleRow(_ title: String, detail: String?) -> some View {
@@ -128,3 +118,10 @@ private extension EatzyCardMenu {
     }
 }
 
+private struct EatzyCardMenuPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(configuration.isPressed ? Color.gray100 : Color.coreWhite)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
