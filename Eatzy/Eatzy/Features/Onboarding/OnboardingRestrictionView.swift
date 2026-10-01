@@ -58,7 +58,10 @@ struct OnboardingRestrictionView: View {
                 store.send(.continueButtonTapped)
             }
             .padding(.horizontal, 20)
+            .padding(.top, 20)
             .padding(.bottom, 16)
+            .frame(maxWidth: .infinity)
+            .background(.coreWhite)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }

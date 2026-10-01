@@ -45,14 +45,15 @@ struct EatzyButtonOption: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text(title)
-                    .applyEatzyFont(.button_18_m)
-                    .foregroundStyle(state.foregroundColor)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
+            Text(title)
+                .applyEatzyFont(.button_18_m)
+                .foregroundStyle(state.foregroundColor)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
+            .frame(maxWidth: 343, alignment: .leading)
             .background(.coreWhite)
             .clipShape(RoundedRectangle(cornerRadius: 25))
             .overlay {
@@ -65,4 +66,3 @@ struct EatzyButtonOption: View {
         .accessibilityAddTraits(state == .selected ? .isSelected : [])
     }
 }
-
