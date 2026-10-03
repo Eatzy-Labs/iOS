@@ -4,10 +4,6 @@
 //
 
 enum OnboardingSignUpMetadata {
-    static let universityCodes = [
-        "KNU": "knu"
-    ]
-
     static let nationalityCodes = [
         "Korea": "KR",
         "United States": "US",
@@ -30,7 +26,7 @@ enum OnboardingSignUpMetadata {
 
 extension OnboardingFeature.State {
     var selectedUniversityCode: String? {
-        selectedUniversity.first.flatMap { OnboardingSignUpMetadata.universityCodes[$0] }
+        selectedUniversity.first
     }
 
     var selectedNationalityCode: String? {
