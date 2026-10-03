@@ -41,6 +41,9 @@ struct OnboardingFeature: Reducer {
         var selectedReligions: Set<String> = []
         var selectedDiets: Set<String> = []
         var selectedFoodRestrictions: Set<String> = []
+        var universities: [UniversitySummaryDTO] = []
+        var isUniversitiesLoading = false
+        var universitiesErrorMessage: String?
         var taxonomy: DietaryTaxonomyResponseDTO?
         var isTaxonomyLoading = false
         var taxonomyErrorMessage: String?
@@ -60,6 +63,17 @@ struct OnboardingFeature: Reducer {
                 (taxonomy?.ingredients.map {
                     Option(id: $0.code, title: "No \($0.nameEn)")
                 } ?? [])
+        }
+
+        var universityOptions: [String] {
+            universities.map(\.code)
+        }
+
+        var selectedUniversityTitle: String {
+            guard let code = selectedUniversity.first else {
+                return "Please Select"
+            }
+            return universities.first(where: { $0.code == code })?.nameEn ?? code
         }
 
         var dietaryProfile: DietaryProfileDTO {
@@ -82,6 +96,8 @@ struct OnboardingFeature: Reducer {
 
     enum Action {
         case viewAppeared
+        case universitiesRetryTapped
+        case universitiesResponse(Result<UniversitiesResponseDTO, NetworkError>)
         case taxonomyRetryTapped
         case taxonomyResponse(Result<DietaryTaxonomyResponseDTO, NetworkError>)
         case universitySelectionChanged(Set<String>)
@@ -100,31 +116,75 @@ struct OnboardingFeature: Reducer {
     }
 
     @Dependency(\.dietaryClient) private var dietaryClient
+    @Dependency(\.catalogClient) private var catalogClient
 
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
             case .viewAppeared:
-                guard state.taxonomy == nil, !state.isTaxonomyLoading else {
-                    return .none
+                var effects: [Effect<Action>] = []
+
+                if state.universities.isEmpty, !state.isUniversitiesLoading {
+                    state.isUniversitiesLoading = true
+                    state.universitiesErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .universitiesResponse(
+                                        .success(try await catalogClient.fetchUniversities())
+                                    )
+                                )
+                            } catch {
+                                await send(
+                                    .universitiesResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
                 }
-                state.isTaxonomyLoading = true
-                state.taxonomyErrorMessage = nil
-                return .run { send in
-                    do {
-                        await send(
-                            .taxonomyResponse(
-                                .success(try await dietaryClient.fetchTaxonomy())
-                            )
-                        )
-                    } catch {
-                        await send(
-                            .taxonomyResponse(
-                                .failure(error as? NetworkError ?? .unknownError)
-                            )
-                        )
-                    }
+
+                if state.taxonomy == nil, !state.isTaxonomyLoading {
+                    state.isTaxonomyLoading = true
+                    state.taxonomyErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .taxonomyResponse(
+                                        .success(try await dietaryClient.fetchTaxonomy())
+                                    )
+                                )
+                            } catch {
+                                await send(
+                                    .taxonomyResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
                 }
+
+                return .merge(effects)
+
+            case .universitiesRetryTapped:
+                state.universities = []
+                state.isUniversitiesLoading = false
+                return .send(.viewAppeared)
+
+            case let .universitiesResponse(.success(response)):
+                state.isUniversitiesLoading = false
+                state.universitiesErrorMessage = nil
+                state.universities = response.universities
+                return .none
+
+            case let .universitiesResponse(.failure(error)):
+                state.isUniversitiesLoading = false
+                state.universitiesErrorMessage = error.description
+                return .none
 
             case .taxonomyRetryTapped:
                 state.taxonomy = nil
