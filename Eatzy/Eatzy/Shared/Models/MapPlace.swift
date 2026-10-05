@@ -2,6 +2,8 @@
 //  MapPlace.swift
 //  Eatzy
 //
+//  Created by sun on 10/5/26.
+//
 
 import Foundation
 
@@ -19,6 +21,13 @@ struct MapPlace: Equatable, Identifiable {
         case cafe
         case office
         case store
+
+        nonisolated init?(serverValue: String) {
+            guard let category = Self(rawValue: serverValue.lowercased()), category != .all else {
+                return nil
+            }
+            self = category
+        }
     }
 
     let id: String
@@ -31,8 +40,9 @@ struct MapPlace: Equatable, Identifiable {
     let operatingHours: [OperatingHour]
     let imageNames: [String]
     let hasMenu: Bool
+    let cafeteriaCode: String?
 
-    init(
+    nonisolated init(
         id: String,
         name: String,
         category: Category,
@@ -42,7 +52,8 @@ struct MapPlace: Equatable, Identifiable {
         description: String = "",
         operatingHours: [OperatingHour] = [],
         imageNames: [String] = [],
-        hasMenu: Bool? = nil
+        hasMenu: Bool? = nil,
+        cafeteriaCode: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -54,5 +65,32 @@ struct MapPlace: Equatable, Identifiable {
         self.operatingHours = operatingHours
         self.imageNames = imageNames
         self.hasMenu = hasMenu ?? (category == .cafeteria)
+        self.cafeteriaCode = cafeteriaCode
+    }
+}
+
+extension MapPlace {
+    nonisolated init?(_ dto: PlaceSummaryDTO) {
+        guard let category = Category(serverValue: dto.category) else {
+            return nil
+        }
+
+        let displayName = dto.nameEn ?? dto.nameKo ?? ""
+        let name = [dto.buildingNo, displayName]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+
+        self.init(
+            id: String(dto.id),
+            name: name,
+            category: category,
+            latitude: dto.latitude,
+            longitude: dto.longitude,
+            subtitle: dto.nameKo ?? "",
+            description: dto.descriptionEn ?? dto.descriptionKo ?? "",
+            hasMenu: dto.hasMenu,
+            cafeteriaCode: dto.cafeteriaCode
+        )
     }
 }

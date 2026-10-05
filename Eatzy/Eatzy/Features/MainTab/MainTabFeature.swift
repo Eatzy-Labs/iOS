@@ -30,12 +30,13 @@ struct MainTabFeature: Reducer {
         var isMenuSheetPresented = false
         var menuSheet = MenuSheetFeature.State()
         var isSettingPresented = false
-        var map = MapFeature.State()
+        var map: MapFeature.State
         var setting: SettingFeature.State
 
         init(isAuthenticated: Bool = true, universityCode: String = "knu") {
             preferredUniversityCode = universityCode
             selectedUniversityCode = universityCode
+            map = MapFeature.State(universityCode: universityCode)
             setting = SettingFeature.State(
                 isAuthenticated: isAuthenticated,
                 universityCode: universityCode

@@ -41,6 +41,25 @@ struct MapView: View {
                 .scrollIndicators(.hidden)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 12)
+
+                if store.isPlacesLoading {
+                    ProgressView()
+                        .padding(.top, 80)
+                } else if let message = store.placesErrorMessage {
+                    VStack(spacing: 12) {
+                        Text(message)
+                            .applyEatzyFont(.body_14_r)
+                            .foregroundStyle(.gray500)
+
+                        Button("Retry") {
+                            store.send(.placesRetryTapped)
+                        }
+                        .applyEatzyFont(.button_14_m)
+                        .foregroundStyle(.orange500)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 80)
+                }
             }
         }
         .background(.coreWhite)
