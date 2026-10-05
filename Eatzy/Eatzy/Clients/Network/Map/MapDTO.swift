@@ -20,6 +20,16 @@ struct PlaceOperatingHourDTO: Decodable, Equatable, Sendable {
     let hours: String?
 }
 
+struct PlaceCategoriesResponseDTO: Decodable, Equatable, Sendable {
+    let categories: [PlaceCategoryDTO]
+}
+
+struct PlaceCategoryDTO: Decodable, Equatable, Sendable {
+    let code: String
+    let nameEn: String
+    let nameKo: String
+}
+
 struct PlaceSummaryDTO: Decodable, Equatable, Sendable {
     let id: Int
     let category: String

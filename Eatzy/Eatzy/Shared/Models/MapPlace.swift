@@ -8,6 +8,13 @@
 import Foundation
 
 struct MapPlace: Equatable, Identifiable {
+    struct CategoryOption: Equatable, Identifiable {
+        let category: Category
+        let title: String
+
+        var id: Category { category }
+    }
+
     struct OperatingHour: Equatable, Identifiable {
         let label: String
         let time: String
@@ -69,6 +76,15 @@ struct MapPlace: Equatable, Identifiable {
         self.imageURLs = imageURLs
         self.hasMenu = hasMenu ?? (category == .cafeteria)
         self.cafeteriaCode = cafeteriaCode
+    }
+}
+
+extension MapPlace.CategoryOption {
+    nonisolated init?(_ dto: PlaceCategoryDTO) {
+        guard let category = MapPlace.Category(serverValue: dto.code) else {
+            return nil
+        }
+        self.init(category: category, title: dto.nameEn)
     }
 }
 

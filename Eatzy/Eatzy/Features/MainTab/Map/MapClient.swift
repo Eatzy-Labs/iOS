@@ -16,6 +16,7 @@ struct MapClient {
         _ universityCode: String,
         _ placeID: String
     ) async throws -> PlaceDetailResponseDTO
+    var fetchCategories: @Sendable () async throws -> PlaceCategoriesResponseDTO
 }
 
 extension MapClient: DependencyKey {
@@ -31,6 +32,9 @@ extension MapClient: DependencyKey {
                 universityCode: universityCode,
                 placeID: placeID
             )
+        },
+        fetchCategories: {
+            try await MapService().fetchCategories()
         }
     )
 
@@ -40,6 +44,9 @@ extension MapClient: DependencyKey {
         },
         fetchPlaceDetail: { _, _ in
             throw NetworkError.notFound
+        },
+        fetchCategories: {
+            PlaceCategoriesResponseDTO(categories: [])
         }
     )
 }

@@ -11,9 +11,12 @@ struct MapFeature: Reducer {
         var universityCode: String
         var selectedUniversity = "Kyungpook Univ"
         var places: [MapPlace] = []
+        var categoryOptions: [MapPlace.CategoryOption] = []
         var selectedCategory: MapPlace.Category = .all
         var isPlacesLoading = false
         var placesErrorMessage: String?
+        var isCategoriesLoading = false
+        var categoriesErrorMessage: String?
         var isPlaceDetailLoading = false
         var placeDetailErrorMessage: String?
         var isVisible = false
@@ -28,6 +31,10 @@ struct MapFeature: Reducer {
             return places.filter { $0.category == selectedCategory }
         }
 
+        var displayedCategoryOptions: [MapPlace.CategoryOption] {
+            [.init(category: .all, title: "All")] + categoryOptions
+        }
+
         init(universityCode: String = "knu") {
             self.universityCode = universityCode
         }
@@ -38,6 +45,8 @@ struct MapFeature: Reducer {
         case viewAppeared
         case placesRetryTapped
         case placesResponse(Result<PlacesResponseDTO, NetworkError>)
+        case categoriesRetryTapped
+        case categoriesResponse(Result<PlaceCategoriesResponseDTO, NetworkError>)
         case universityButtonTapped
         case settingButtonTapped
         case categorySelected(MapPlace.Category)
@@ -67,27 +76,56 @@ struct MapFeature: Reducer {
             switch action {
             case .viewAppeared:
                 state.isVisible = true
-                guard !state.isPlacesLoading, state.places.isEmpty else {
-                    return .none
+                var effects: [Effect<Action>] = []
+
+                if !state.isPlacesLoading, state.places.isEmpty {
+                    state.isPlacesLoading = true
+                    state.placesErrorMessage = nil
+                    let universityCode = state.universityCode
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .placesResponse(
+                                        .success(
+                                            try await mapClient.fetchPlaces(universityCode, nil)
+                                        )
+                                    )
+                                )
+                            } catch {
+                                await send(
+                                    .placesResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
                 }
-                state.isPlacesLoading = true
-                state.placesErrorMessage = nil
-                let universityCode = state.universityCode
-                return .run { send in
-                    do {
-                        await send(
-                            .placesResponse(
-                                .success(try await mapClient.fetchPlaces(universityCode, nil))
-                            )
-                        )
-                    } catch {
-                        await send(
-                            .placesResponse(
-                                .failure(error as? NetworkError ?? .unknownError)
-                            )
-                        )
-                    }
+
+                if !state.isCategoriesLoading, state.categoryOptions.isEmpty {
+                    state.isCategoriesLoading = true
+                    state.categoriesErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .categoriesResponse(
+                                        .success(try await mapClient.fetchCategories())
+                                    )
+                                )
+                            } catch {
+                                await send(
+                                    .categoriesResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
                 }
+
+                return .merge(effects)
 
             case .placesRetryTapped:
                 state.places = []
@@ -104,6 +142,24 @@ struct MapFeature: Reducer {
                 state.isPlacesLoading = false
                 state.placesErrorMessage = error.description
                 state.places = []
+                return .none
+
+            case .categoriesRetryTapped:
+                state.categoryOptions = []
+                state.isCategoriesLoading = false
+                return .send(.viewAppeared)
+
+            case let .categoriesResponse(.success(response)):
+                state.isCategoriesLoading = false
+                state.categoriesErrorMessage = nil
+                state.categoryOptions = response.categories.compactMap(
+                    MapPlace.CategoryOption.init
+                )
+                return .none
+
+            case let .categoriesResponse(.failure(error)):
+                state.isCategoriesLoading = false
+                state.categoriesErrorMessage = error.description
                 return .none
 
             case .universityButtonTapped:

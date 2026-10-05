@@ -31,8 +31,8 @@ struct MapView: View {
 
                 ScrollView(.horizontal) {
                     LazyHStack(spacing: 8) {
-                        ForEach(MapPlace.Category.allCases, id: \.self) { category in
-                            categoryChip(category)
+                        ForEach(store.displayedCategoryOptions) { option in
+                            categoryChip(option)
                         }
                     }
                     .padding(.horizontal, 8)
@@ -56,6 +56,20 @@ struct MapView: View {
 
                         Button("Retry") {
                             store.send(.placesRetryTapped)
+                        }
+                        .applyEatzyFont(.button_14_m)
+                        .foregroundStyle(.orange500)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 80)
+                } else if let message = store.categoriesErrorMessage {
+                    VStack(spacing: 12) {
+                        Text(message)
+                            .applyEatzyFont(.body_14_r)
+                            .foregroundStyle(.gray500)
+
+                        Button("Retry") {
+                            store.send(.categoriesRetryTapped)
                         }
                         .applyEatzyFont(.button_14_m)
                         .foregroundStyle(.orange500)
@@ -90,13 +104,13 @@ struct MapView: View {
 }
 
 private extension MapView {
-    func categoryChip(_ category: MapPlace.Category) -> some View {
+    func categoryChip(_ option: MapPlace.CategoryOption) -> some View {
         EatzyChipButton(
-            category.title,
-            icon: category.icon,
-            state: store.selectedCategory == category ? .selected : .unselected
+            option.title,
+            icon: option.category.icon,
+            state: store.selectedCategory == option.category ? .selected : .unselected
         ) {
-            store.send(.categorySelected(category))
+            store.send(.categorySelected(option.category))
         }
     }
 

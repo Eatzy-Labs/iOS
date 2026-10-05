@@ -29,4 +29,8 @@ final class MapService {
             .placeDetail(universityCode: universityCode, placeID: placeID)
         )
     }
+
+    func fetchCategories() async throws -> PlaceCategoriesResponseDTO {
+        try await service.request(.categories)
+    }
 }
