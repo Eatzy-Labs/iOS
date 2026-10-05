@@ -30,12 +30,13 @@ struct MainTabFeature: Reducer {
         var isMenuSheetPresented = false
         var menuSheet = MenuSheetFeature.State()
         var isSettingPresented = false
-        var map = MapFeature.State()
+        var map: MapFeature.State
         var setting: SettingFeature.State
 
         init(isAuthenticated: Bool = true, universityCode: String = "knu") {
             preferredUniversityCode = universityCode
             selectedUniversityCode = universityCode
+            map = MapFeature.State(universityCode: universityCode)
             setting = SettingFeature.State(
                 isAuthenticated: isAuthenticated,
                 universityCode: universityCode
@@ -136,10 +137,17 @@ struct MainTabFeature: Reducer {
                 state.isCatalogLoading = false
                 state.catalogUniversities = response.universities
                 let university = response.universities.first {
+                    $0.code == state.selectedUniversityCode
+                } ?? response.universities.first {
                     $0.code == state.preferredUniversityCode
                 } ?? response.universities.first
                 state.selectedUniversityCode = university?.code ?? ""
-                state.selectedCafeteriaCode = university?.cafeterias.first?.code ?? ""
+                let containsSelectedCafeteria = university?.cafeterias.contains {
+                    $0.code == state.selectedCafeteriaCode
+                } == true
+                if !containsSelectedCafeteria {
+                    state.selectedCafeteriaCode = university?.cafeterias.first?.code ?? ""
+                }
                 return .send(.loadMeals)
 
             case let .catalogResponse(.failure(error)):
@@ -254,6 +262,12 @@ struct MainTabFeature: Reducer {
             case .settingButtonTapped, .map(.delegate(.settingRequested)):
                 state.isSettingPresented = true
                 return .none
+
+            case let .map(.delegate(.menuRequested(cafeteriaCode))):
+                state.selectedUniversityCode = state.map.universityCode
+                state.selectedCafeteriaCode = cafeteriaCode
+                state.selectedTab = .menu
+                return .send(.loadMeals)
 
             case .map:
                 return .none
