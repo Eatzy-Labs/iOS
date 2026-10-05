@@ -14,6 +14,8 @@ struct MapFeature: Reducer {
         var selectedCategory: MapPlace.Category = .all
         var isPlacesLoading = false
         var placesErrorMessage: String?
+        var isPlaceDetailLoading = false
+        var placeDetailErrorMessage: String?
         var isVisible = false
         var isPlaceSheetPresented = false
         var placeSheet = MapPlaceSheetFeature.State()
@@ -40,6 +42,10 @@ struct MapFeature: Reducer {
         case settingButtonTapped
         case categorySelected(MapPlace.Category)
         case markerTapped(MapPlace.ID)
+        case placeDetailResponse(
+            placeID: MapPlace.ID,
+            Result<PlaceDetailResponseDTO, NetworkError>
+        )
         case placeSheetPresentationChanged(Bool)
         case placeSheet(MapPlaceSheetFeature.Action)
         case delegate(Delegate)
@@ -110,8 +116,48 @@ struct MapFeature: Reducer {
                 return .none
 
             case let .markerTapped(placeID):
-                state.placeSheet.place = state.places.first { $0.id == placeID }
-                state.isPlaceSheetPresented = state.placeSheet.place != nil
+                state.isPlaceDetailLoading = true
+                state.placeDetailErrorMessage = nil
+                let universityCode = state.universityCode
+                return .run { send in
+                    do {
+                        await send(
+                            .placeDetailResponse(
+                                placeID: placeID,
+                                .success(
+                                    try await mapClient.fetchPlaceDetail(
+                                        universityCode,
+                                        placeID
+                                    )
+                                )
+                            )
+                        )
+                    } catch {
+                        await send(
+                            .placeDetailResponse(
+                                placeID: placeID,
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+
+            case let .placeDetailResponse(placeID, .success(response)):
+                state.isPlaceDetailLoading = false
+                state.placeDetailErrorMessage = nil
+                guard
+                    String(response.place.id) == placeID,
+                    let place = MapPlace(response)
+                else {
+                    return .none
+                }
+                state.placeSheet.place = place
+                state.isPlaceSheetPresented = true
+                return .none
+
+            case let .placeDetailResponse(_, .failure(error)):
+                state.isPlaceDetailLoading = false
+                state.placeDetailErrorMessage = error.description
                 return .none
 
             case let .placeSheetPresentationChanged(isPresented):

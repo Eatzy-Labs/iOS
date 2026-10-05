@@ -45,6 +45,9 @@ struct MapView: View {
                 if store.isPlacesLoading {
                     ProgressView()
                         .padding(.top, 80)
+                } else if store.isPlaceDetailLoading {
+                    ProgressView()
+                        .padding(.top, 80)
                 } else if let message = store.placesErrorMessage {
                     VStack(spacing: 12) {
                         Text(message)
@@ -59,6 +62,12 @@ struct MapView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 80)
+                } else if let message = store.placeDetailErrorMessage {
+                    Text(message)
+                        .applyEatzyFont(.body_14_r)
+                        .foregroundStyle(.gray500)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 80)
                 }
             }
         }

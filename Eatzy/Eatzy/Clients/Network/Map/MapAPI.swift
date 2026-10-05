@@ -11,6 +11,7 @@ import Moya
 
 enum MapAPI: BaseTargetType {
     case places(universityCode: String, category: String?)
+    case placeDetail(universityCode: String, placeID: String)
 
     var baseURL: URL { NetworkConfiguration.baseURL }
 
@@ -18,6 +19,8 @@ enum MapAPI: BaseTargetType {
         switch self {
         case let .places(universityCode, _):
             return "/api/v1/universities/\(universityCode)/places"
+        case let .placeDetail(universityCode, placeID):
+            return "/api/v1/universities/\(universityCode)/places/\(placeID)"
         }
     }
 
@@ -31,6 +34,8 @@ enum MapAPI: BaseTargetType {
                 parameters: ["category": category],
                 encoding: URLEncoding.queryString
             )
+        case .placeDetail:
+            return .requestPlain
         }
     }
 

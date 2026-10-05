@@ -39,6 +39,7 @@ struct MapPlace: Equatable, Identifiable {
     let description: String
     let operatingHours: [OperatingHour]
     let imageNames: [String]
+    let imageURLs: [String]
     let hasMenu: Bool
     let cafeteriaCode: String?
 
@@ -52,6 +53,7 @@ struct MapPlace: Equatable, Identifiable {
         description: String = "",
         operatingHours: [OperatingHour] = [],
         imageNames: [String] = [],
+        imageURLs: [String] = [],
         hasMenu: Bool? = nil,
         cafeteriaCode: String? = nil
     ) {
@@ -64,6 +66,7 @@ struct MapPlace: Equatable, Identifiable {
         self.description = description
         self.operatingHours = operatingHours
         self.imageNames = imageNames
+        self.imageURLs = imageURLs
         self.hasMenu = hasMenu ?? (category == .cafeteria)
         self.cafeteriaCode = cafeteriaCode
     }
@@ -91,6 +94,43 @@ extension MapPlace {
             description: dto.descriptionEn ?? dto.descriptionKo ?? "",
             hasMenu: dto.hasMenu,
             cafeteriaCode: dto.cafeteriaCode
+        )
+    }
+
+    nonisolated init?(_ dto: PlaceDetailResponseDTO) {
+        guard let category = Category(serverValue: dto.place.category) else {
+            return nil
+        }
+
+        let displayName = dto.place.nameEn ?? dto.place.nameKo ?? ""
+        let name = [dto.place.buildingNo, displayName]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+
+        self.init(
+            id: String(dto.place.id),
+            name: name,
+            category: category,
+            latitude: dto.place.latitude,
+            longitude: dto.place.longitude,
+            subtitle: dto.place.nameKo ?? "",
+            description: dto.place.descriptionEn ?? dto.place.descriptionKo ?? "",
+            operatingHours: dto.operatingHours.compactMap { operatingHour in
+                guard
+                    let mealType = operatingHour.mealType,
+                    let hours = operatingHour.hours
+                else {
+                    return nil
+                }
+                return OperatingHour(
+                    label: mealType.lowercased().capitalized,
+                    time: hours
+                )
+            },
+            imageURLs: dto.imageUrls,
+            hasMenu: dto.place.hasMenu,
+            cafeteriaCode: dto.place.cafeteriaCode
         )
     }
 }

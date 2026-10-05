@@ -12,19 +12,36 @@ struct MapClient {
         _ universityCode: String,
         _ category: String?
     ) async throws -> PlacesResponseDTO
+    var fetchPlaceDetail: @Sendable (
+        _ universityCode: String,
+        _ placeID: String
+    ) async throws -> PlaceDetailResponseDTO
 }
 
 extension MapClient: DependencyKey {
-    static let liveValue = Self { universityCode, category in
-        try await MapService().fetchPlaces(
-            universityCode: universityCode,
-            category: category
-        )
-    }
+    static let liveValue = Self(
+        fetchPlaces: { universityCode, category in
+            try await MapService().fetchPlaces(
+                universityCode: universityCode,
+                category: category
+            )
+        },
+        fetchPlaceDetail: { universityCode, placeID in
+            try await MapService().fetchPlaceDetail(
+                universityCode: universityCode,
+                placeID: placeID
+            )
+        }
+    )
 
-    static let testValue = Self { _, _ in
-        PlacesResponseDTO(places: [])
-    }
+    static let testValue = Self(
+        fetchPlaces: { _, _ in
+            PlacesResponseDTO(places: [])
+        },
+        fetchPlaceDetail: { _, _ in
+            throw NetworkError.notFound
+        }
+    )
 }
 
 extension DependencyValues {

@@ -79,16 +79,15 @@ private extension MapPlaceSheetView {
                 .padding(.top, 20)
             }
 
-            if place.imageNames.count == 1,
-               let imageName = place.imageNames.first {
-                placeImage(imageName)
+            if imageCount(for: place) == 1 {
+                placeImage(place, at: 0)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 20)
-            } else if place.imageNames.count >= 2 {
+            } else if imageCount(for: place) >= 2 {
                 ScrollView(.horizontal) {
                     LazyHStack(spacing: 8) {
-                        ForEach(Array(place.imageNames.enumerated()), id: \.offset) { _, imageName in
-                            placeImage(imageName)
+                        ForEach(0..<imageCount(for: place), id: \.self) { index in
+                            placeImage(place, at: index)
                         }
                     }
                 }
@@ -98,10 +97,36 @@ private extension MapPlaceSheetView {
         }
     }
 
-    func placeImage(_ imageName: String) -> some View {
-        Image(imageName)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
+    func imageCount(for place: MapPlace) -> Int {
+        max(place.imageNames.count, place.imageURLs.count)
+    }
+
+    @ViewBuilder
+    func placeImage(_ place: MapPlace, at index: Int) -> some View {
+        Group {
+            if place.imageNames.indices.contains(index) {
+                Image(place.imageNames[index])
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                AsyncImage(url: URL(string: place.imageURLs[index])) { phase in
+                    switch phase {
+                    case let .success(image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .empty:
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(.gray100)
+                    case .failure:
+                        Color.gray100
+                    @unknown default:
+                        Color.gray100
+                    }
+                }
+            }
+        }
             .frame(width: 165, height: 165)
             .clipped()
             .clipShape(RoundedRectangle(cornerRadius: 12))
