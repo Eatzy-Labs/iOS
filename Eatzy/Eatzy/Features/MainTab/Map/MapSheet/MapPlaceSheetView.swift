@@ -24,7 +24,8 @@ struct MapPlaceSheetView: View {
                 }
             }
 
-            if store.place?.hasMenu == true {
+            if store.place?.hasMenu == true,
+               store.place?.cafeteriaCode?.isEmpty == false {
                 EatzyCTAButton("menu", state: .active) {
                     store.send(.menuButtonTapped)
                 }

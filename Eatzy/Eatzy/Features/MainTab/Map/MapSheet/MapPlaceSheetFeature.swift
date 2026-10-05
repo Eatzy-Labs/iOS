@@ -21,14 +21,22 @@ struct MapPlaceSheetFeature: Reducer {
 
         enum Delegate {
             case dismissRequested
+            case menuRequested(cafeteriaCode: String)
         }
     }
 
     var body: some Reducer<State, Action> {
-        Reduce { _, action in
+        Reduce { state, action in
             switch action {
             case .menuButtonTapped:
-                return .none
+                guard
+                    state.place?.hasMenu == true,
+                    let cafeteriaCode = state.place?.cafeteriaCode,
+                    !cafeteriaCode.isEmpty
+                else {
+                    return .none
+                }
+                return .send(.delegate(.menuRequested(cafeteriaCode: cafeteriaCode)))
 
             case .delegate:
                 return .none

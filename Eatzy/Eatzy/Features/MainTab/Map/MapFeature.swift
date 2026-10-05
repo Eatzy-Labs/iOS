@@ -52,6 +52,7 @@ struct MapFeature: Reducer {
 
         enum Delegate {
             case settingRequested
+            case menuRequested(cafeteriaCode: String)
         }
     }
 
@@ -167,6 +168,10 @@ struct MapFeature: Reducer {
             case .placeSheet(.delegate(.dismissRequested)):
                 state.isPlaceSheetPresented = false
                 return .none
+
+            case let .placeSheet(.delegate(.menuRequested(cafeteriaCode))):
+                state.isPlaceSheetPresented = false
+                return .send(.delegate(.menuRequested(cafeteriaCode: cafeteriaCode)))
 
             case .placeSheet:
                 return .none
