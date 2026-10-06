@@ -29,19 +29,6 @@ struct MapView: View {
                 )
                     .ignoresSafeArea(edges: .bottom)
 
-                ScrollView(.horizontal) {
-                    LazyHStack(spacing: 8) {
-                        ForEach(store.displayedCategoryOptions) { option in
-                            categoryChip(option)
-                        }
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                }
-                .scrollIndicators(.hidden)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 12)
-
                 if store.isPlacesLoading {
                     ProgressView()
                         .padding(.top, 80)
@@ -56,20 +43,6 @@ struct MapView: View {
 
                         Button("Retry") {
                             store.send(.placesRetryTapped)
-                        }
-                        .applyEatzyFont(.button_14_m)
-                        .foregroundStyle(.orange500)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 80)
-                } else if let message = store.categoriesErrorMessage {
-                    VStack(spacing: 12) {
-                        Text(message)
-                            .applyEatzyFont(.body_14_r)
-                            .foregroundStyle(.gray500)
-
-                        Button("Retry") {
-                            store.send(.categoriesRetryTapped)
                         }
                         .applyEatzyFont(.button_14_m)
                         .foregroundStyle(.orange500)
@@ -104,16 +77,6 @@ struct MapView: View {
 }
 
 private extension MapView {
-    func categoryChip(_ option: MapPlace.CategoryOption) -> some View {
-        EatzyChipButton(
-            option.title,
-            icon: option.category.icon,
-            state: store.selectedCategory == option.category ? .selected : .unselected
-        ) {
-            store.send(.categorySelected(option.category))
-        }
-    }
-
     var placeSheetPresentation: Binding<Bool> {
         Binding(
             get: { store.isPlaceSheetPresented },
