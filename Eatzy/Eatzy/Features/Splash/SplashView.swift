@@ -11,8 +11,8 @@ struct SplashView: View {
             Color.coreWhite
                 .ignoresSafeArea()
 
-            Image(.imgLogo)
+            SplashLottieView()
+                .frame(width: 375, height: 137)
         }
     }
 }
-
