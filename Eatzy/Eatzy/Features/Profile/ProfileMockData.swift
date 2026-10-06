@@ -21,14 +21,4 @@ enum ProfileMockData {
         "Korea University"
     ]
 
-    static let countries = [
-        "Korea",
-        "United States",
-        "Japan",
-        "China",
-        "Vietnam",
-        "Thailand",
-        "Indonesia",
-        "Malaysia"
-    ]
 }

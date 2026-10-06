@@ -11,14 +11,6 @@ import SwiftUI
 struct OnboardingCountryView: View {
     let store: StoreOf<OnboardingFeature>
 
-    private let countries = [
-        "Korea",
-        "United States",
-        "China",
-        "Japan",
-        "Vietnam"
-    ]
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("2/3")
@@ -31,15 +23,38 @@ struct OnboardingCountryView: View {
                 .foregroundStyle(.coreBlack)
                 .padding(.top, 12)
 
-            EatzyDropdown(
-                title: store.selectedCountry.first ?? "Please Select",
-                options: countries,
-                selections: Binding(
-                    get: { store.selectedCountry },
-                    set: { store.send(.countrySelectionChanged($0)) }
+            if store.isCountriesLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 28)
+            } else if let message = store.countriesErrorMessage {
+                VStack(spacing: 12) {
+                    Text(message)
+                        .applyEatzyFont(.body_14_r)
+                        .foregroundStyle(.gray500)
+
+                    Button("Retry") {
+                        store.send(.countriesRetryTapped)
+                    }
+                    .applyEatzyFont(.button_14_m)
+                    .foregroundStyle(.orange500)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 28)
+            } else {
+                EatzyDropdown(
+                    title: store.selectedCountryTitle,
+                    options: store.countryOptions,
+                    selections: Binding(
+                        get: { store.selectedCountry },
+                        set: { store.send(.countrySelectionChanged($0)) }
+                    ),
+                    optionTitle: { code in
+                        store.countries.first(where: { $0.code == code })?.name ?? code
+                    }
                 )
-            )
-            .padding(.top, 28)
+                .padding(.top, 28)
+            }
 
             Spacer(minLength: 24)
         }

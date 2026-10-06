@@ -14,6 +14,9 @@ struct SettingFeature: Reducer {
         var profile: ProfileFeature.State
         var dietaryPreference: DietaryPreferenceFeature.State
         var me: MeResponseDTO?
+        var countries: [CountryDTO] = []
+        var isCountriesLoading = false
+        var countriesErrorMessage: String?
         var isProfileLoading = false
         var profileErrorMessage: String?
         var isLogoutAlertPresented = false
@@ -38,6 +41,7 @@ struct SettingFeature: Reducer {
     enum Action {
         case viewAppeared
         case profileResponse(Result<MeResponseDTO, NetworkError>)
+        case countriesResponse(Result<CountriesResponseDTO, NetworkError>)
         case backButtonTapped
         case loginButtonTapped
         case logoutButtonTapped
@@ -59,6 +63,7 @@ struct SettingFeature: Reducer {
     }
 
     @Dependency(\.usersClient) private var usersClient
+    @Dependency(\.catalogClient) private var catalogClient
     @Dependency(\.logoutClient) private var logoutClient
 
     var body: some Reducer<State, Action> {
@@ -73,23 +78,55 @@ struct SettingFeature: Reducer {
         Reduce { state, action in
             switch action {
             case .viewAppeared:
-                guard state.isAuthenticated, state.me == nil, !state.isProfileLoading else {
+                guard state.isAuthenticated else {
                     return .none
                 }
 
-                state.isProfileLoading = true
-                state.profileErrorMessage = nil
-                return .run { send in
-                    do {
-                        await send(.profileResponse(.success(try await usersClient.fetchMe())))
-                    } catch {
-                        await send(
-                            .profileResponse(
-                                .failure(error as? NetworkError ?? .unknownError)
-                            )
-                        )
-                    }
+                var effects: [Effect<Action>] = []
+
+                if state.me == nil, !state.isProfileLoading {
+                    state.isProfileLoading = true
+                    state.profileErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .profileResponse(.success(try await usersClient.fetchMe()))
+                                )
+                            } catch {
+                                await send(
+                                    .profileResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
                 }
+
+                if state.countries.isEmpty, !state.isCountriesLoading {
+                    state.isCountriesLoading = true
+                    state.countriesErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .countriesResponse(
+                                        .success(try await catalogClient.fetchCountries("en"))
+                                    )
+                                )
+                            } catch {
+                                await send(
+                                    .countriesResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
+                }
+
+                return .merge(effects)
 
             case let .profileResponse(.success(response)):
                 state.isProfileLoading = false
@@ -100,18 +137,38 @@ struct SettingFeature: Reducer {
                     userID: response.profileId ?? response.nickname ?? response.id,
                     email: response.email,
                     university: state.profile.profile.university,
-                    country: OnboardingSignUpMetadata.nationalityName(
-                        for: response.nationality
-                    ),
+                    country: countryName(for: response.nationality, in: state.countries),
                     imageData: state.profile.profile.imageData
                 )
                 state.profile.profile = profile
                 state.profile.draft = profile
+                state.profile.nationalityCode = response.nationality
+                state.profile.draftNationalityCode = response.nationality
                 return .none
 
             case let .profileResponse(.failure(error)):
                 state.isProfileLoading = false
                 state.profileErrorMessage = error.description
+                return .none
+
+            case let .countriesResponse(.success(response)):
+                state.isCountriesLoading = false
+                state.countriesErrorMessage = nil
+                state.countries = response.countries
+                state.profile.countries = response.countries
+
+                if let me = state.me {
+                    let country = countryName(for: me.nationality, in: response.countries)
+                    state.profile.profile.country = country
+                    state.profile.draft.country = country
+                    state.profile.nationalityCode = me.nationality
+                    state.profile.draftNationalityCode = me.nationality
+                }
+                return .none
+
+            case let .countriesResponse(.failure(error)):
+                state.isCountriesLoading = false
+                state.countriesErrorMessage = error.description
                 return .none
 
             case .backButtonTapped:
@@ -189,5 +246,9 @@ struct SettingFeature: Reducer {
                 return .none
             }
         }
+    }
+
+    private func countryName(for code: String, in countries: [CountryDTO]) -> String {
+        countries.first(where: { $0.code == code })?.name ?? code
     }
 }
