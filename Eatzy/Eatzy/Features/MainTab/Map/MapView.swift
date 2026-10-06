@@ -12,9 +12,7 @@ struct MapView: View {
     var body: some View {
         VStack(spacing: 0) {
             EatzyNavigationBar(
-                leading: .dropdownTitle(store.selectedUniversity) {
-                    store.send(.universityButtonTapped)
-                },
+                leading: .title(store.selectedUniversity),
                 trailing: [
                     .icon(.icSetting, accessibilityLabel: "Settings") {
                         store.send(.settingButtonTapped)
