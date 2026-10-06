@@ -21,6 +21,15 @@ struct UniversitySummaryDTO: Decodable, Equatable, Sendable {
     let schoolType: String
 }
 
+struct CountriesResponseDTO: Decodable, Equatable, Sendable {
+    let countries: [CountryDTO]
+}
+
+struct CountryDTO: Decodable, Equatable, Sendable {
+    let code: String
+    let name: String
+}
+
 struct CatalogUniversityDTO: Decodable, Equatable, Sendable {
     let code: String
     let name: String?

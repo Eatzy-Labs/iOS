@@ -30,6 +30,6 @@ extension OnboardingFeature.State {
     }
 
     var selectedNationalityCode: String? {
-        selectedCountry.first.flatMap { OnboardingSignUpMetadata.nationalityCodes[$0] }
+        selectedCountry.first
     }
 }
