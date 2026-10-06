@@ -13,7 +13,9 @@ struct ProfileFeature: Reducer {
         var profile: Profile
         var draft: Profile
         var universities: [String]
-        var countries: [String]
+        var countries: [CountryDTO]
+        var nationalityCode: String
+        var draftNationalityCode: String
         var idFieldState = EatzyTextfield.State.writing
         var emailFieldState = EatzyTextfield.State.writing
         var isPhotoPickerPresented = false
@@ -25,12 +27,14 @@ struct ProfileFeature: Reducer {
         init(
             profile: Profile = ProfileMockData.profile,
             universities: [String] = ProfileMockData.universities,
-            countries: [String] = ProfileMockData.countries
+            countries: [CountryDTO] = []
         ) {
             self.profile = profile
             self.draft = profile
             self.universities = universities
             self.countries = countries
+            self.nationalityCode = ""
+            self.draftNationalityCode = ""
         }
     }
 
@@ -50,11 +54,6 @@ struct ProfileFeature: Reducer {
         case photoPickerPresentationChanged(Bool)
         case profileImageDataLoaded(Data?)
         case countryDropdownExpansionChanged(Bool)
-        case profileLoaded(
-            profile: Profile,
-            universities: [String],
-            countries: [String]
-        )
         case discardAlertPresentationChanged(Bool)
         case discardChangesButtonTapped
         case cancelDiscardButtonTapped
@@ -80,6 +79,7 @@ struct ProfileFeature: Reducer {
 
             case .editButtonTapped:
                 state.draft = state.profile
+                state.draftNationalityCode = state.nationalityCode
                 state.isEditing = true
                 return .none
 
@@ -96,9 +96,7 @@ struct ProfileFeature: Reducer {
                 state.isSaving = true
                 state.saveErrorMessage = nil
                 let request = UpdateProfileRequestDTO(
-                    nationality: OnboardingSignUpMetadata.nationalityCode(
-                        for: state.draft.country
-                    ),
+                    nationality: state.draftNationalityCode,
                     profileId: state.draft.userID
                 )
                 return .run { send in
@@ -120,13 +118,13 @@ struct ProfileFeature: Reducer {
             case let .updateProfileResponse(.success(response)):
                 state.isSaving = false
                 state.saveErrorMessage = nil
+                state.nationalityCode = response.nationality
+                state.draftNationalityCode = response.nationality
                 let profile = Profile(
                     userID: response.profileId ?? response.nickname ?? response.id,
                     email: response.email,
                     university: state.profile.university,
-                    country: OnboardingSignUpMetadata.nationalityName(
-                        for: response.nationality
-                    ),
+                    country: countryName(for: response.nationality, in: state.countries),
                     imageData: state.profile.imageData
                 )
                 state.profile = profile
@@ -173,9 +171,10 @@ struct ProfileFeature: Reducer {
             case let .countrySelectionChanged(selection):
                 if let country = singleSelection(
                     from: selection,
-                    previous: [state.draft.country]
+                    previous: [state.draftNationalityCode]
                 ).first {
-                    state.draft.country = country
+                    state.draftNationalityCode = country
+                    state.draft.country = countryName(for: country, in: state.countries)
                 }
                 return .none
 
@@ -196,13 +195,6 @@ struct ProfileFeature: Reducer {
                 state.isCountryDropdownExpanded = isExpanded
                 return .none
 
-            case let .profileLoaded(profile, universities, countries):
-                state.profile = profile
-                state.draft = profile
-                state.universities = universities
-                state.countries = countries
-                return .none
-
             case let .discardAlertPresentationChanged(isPresented):
                 state.isDiscardAlertPresented = isPresented
                 return .none
@@ -213,6 +205,7 @@ struct ProfileFeature: Reducer {
 
             case .discardChangesButtonTapped:
                 state.draft = state.profile
+                state.draftNationalityCode = state.nationalityCode
                 state.idFieldState = .writing
                 state.emailFieldState = .writing
                 state.isDiscardAlertPresented = false
@@ -252,5 +245,9 @@ struct ProfileFeature: Reducer {
         }
 
         return selection.first.map { [$0] } ?? []
+    }
+
+    private func countryName(for code: String, in countries: [CountryDTO]) -> String {
+        countries.first(where: { $0.code == code })?.name ?? code
     }
 }
