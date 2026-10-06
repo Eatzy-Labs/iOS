@@ -29,6 +29,11 @@ struct SettingView: View {
         .task {
             await store.send(.viewAppeared).finish()
         }
+        .sheet(isPresented: legalDocumentPresentation) {
+            LegalDocumentWebView(url: store.selectedLegalDocumentURL)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
         .alert("Log out?", isPresented: logoutAlertPresentation) {
             Button("Cancel", role: .cancel) {}
 
@@ -81,11 +86,7 @@ struct SettingView: View {
                     }
 
                     settingSection("ABOUT") {
-                        SettingMenuCard(items: [
-                            .init(title: "Version", value: "1.0.0", showsChevron: false),
-                            .init(title: "Terms of Service"),
-                            .init(title: "Privacy Policy")
-                        ])
+                        SettingMenuCard(items: aboutItems)
                     }
 
                     if store.isAuthenticated {
@@ -106,6 +107,30 @@ struct SettingView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.gray100)
+    }
+
+    var aboutItems: [SettingMenuCard.Item] {
+        var items = [
+            SettingMenuCard.Item(
+                title: "Version",
+                value: "1.0.0",
+                showsChevron: false
+            )
+        ]
+
+        items.append(
+            .init(title: "Terms of Service", showsLinkIcon: true) {
+                store.send(.legalDocumentTapped(store.legalDocuments?.termsUrl))
+            }
+        )
+
+        items.append(
+            .init(title: "Privacy Policy", showsLinkIcon: true) {
+                store.send(.legalDocumentTapped(store.legalDocuments?.privacyUrl))
+            }
+        )
+
+        return items
     }
 
     func settingSection<Content: View>(
@@ -135,6 +160,17 @@ struct SettingView: View {
             set: { isPresented in
                 if !isPresented {
                     store.send(.logoutErrorDismissed)
+                }
+            }
+        )
+    }
+
+    var legalDocumentPresentation: Binding<Bool> {
+        Binding(
+            get: { store.isLegalDocumentPresented },
+            set: { isPresented in
+                if !isPresented {
+                    store.send(.legalDocumentDismissed)
                 }
             }
         )
