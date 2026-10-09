@@ -12,9 +12,7 @@ struct MapView: View {
     var body: some View {
         VStack(spacing: 0) {
             EatzyNavigationBar(
-                leading: .dropdownTitle(store.selectedUniversity) {
-                    store.send(.universityButtonTapped)
-                },
+                leading: .title(store.selectedUniversity),
                 trailing: [
                     .icon(.icSetting, accessibilityLabel: "Settings") {
                         store.send(.settingButtonTapped)
@@ -29,18 +27,33 @@ struct MapView: View {
                 )
                     .ignoresSafeArea(edges: .bottom)
 
-                ScrollView(.horizontal) {
-                    LazyHStack(spacing: 8) {
-                        ForEach(MapPlace.Category.allCases, id: \.self) { category in
-                            categoryChip(category)
+                if store.isPlacesLoading {
+                    ProgressView()
+                        .padding(.top, 80)
+                } else if store.isPlaceDetailLoading {
+                    ProgressView()
+                        .padding(.top, 80)
+                } else if let message = store.placesErrorMessage {
+                    VStack(spacing: 12) {
+                        Text(message)
+                            .applyEatzyFont(.body_14_r)
+                            .foregroundStyle(.gray500)
+
+                        Button("Retry") {
+                            store.send(.placesRetryTapped)
                         }
+                        .applyEatzyFont(.button_14_m)
+                        .foregroundStyle(.orange500)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 80)
+                } else if let message = store.placeDetailErrorMessage {
+                    Text(message)
+                        .applyEatzyFont(.body_14_r)
+                        .foregroundStyle(.gray500)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 80)
                 }
-                .scrollIndicators(.hidden)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 12)
             }
         }
         .background(.coreWhite)
@@ -62,16 +75,6 @@ struct MapView: View {
 }
 
 private extension MapView {
-    func categoryChip(_ category: MapPlace.Category) -> some View {
-        EatzyChipButton(
-            category.title,
-            icon: category.icon,
-            state: store.selectedCategory == category ? .selected : .unselected
-        ) {
-            store.send(.categorySelected(category))
-        }
-    }
-
     var placeSheetPresentation: Binding<Bool> {
         Binding(
             get: { store.isPlaceSheetPresented },

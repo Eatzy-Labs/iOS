@@ -141,10 +141,13 @@ private extension ProfileView {
             fieldLabel("Country") {
                 EatzyDropdown(
                     title: selectedCountryTitle,
-                    options: store.countries,
+                    options: store.countries.map(\.code),
                     selections: selectedCountry,
                     onExpansionChanged: {
                         store.send(.countryDropdownExpansionChanged($0))
+                    },
+                    optionTitle: { code in
+                        store.countries.first(where: { $0.code == code })?.name ?? code
                     }
                 )
             }
@@ -209,7 +212,7 @@ private extension ProfileView {
 
     var selectedCountry: Binding<Set<String>> {
         Binding(
-            get: { [store.draft.country] },
+            get: { [store.draftNationalityCode] },
             set: { store.send(.countrySelectionChanged($0)) }
         )
     }
@@ -237,7 +240,10 @@ private extension ProfileView {
     }
 
     var selectedCountryTitle: String {
-        store.draft.country.isEmpty ? "Please Select" : store.draft.country
+        guard !store.draftNationalityCode.isEmpty else { return "Please Select" }
+        return store.countries.first {
+            $0.code == store.draftNationalityCode
+        }?.name ?? store.draftNationalityCode
     }
 
 }

@@ -34,6 +34,7 @@ struct NaverMapView: UIViewRepresentable {
     final class Coordinator {
         var onMarkerTapped: (MapPlace.ID) -> Void
         private var markers: [NMFMarker] = []
+        private var hasCenteredPlaces = false
 
         init(onMarkerTapped: @escaping (MapPlace.ID) -> Void) {
             self.onMarkerTapped = onMarkerTapped
@@ -42,6 +43,27 @@ struct NaverMapView: UIViewRepresentable {
         func updateMarkers(for places: [MapPlace], on mapView: NMFMapView) {
             markers.forEach { $0.mapView = nil }
             markers = places.map { makeMarker(for: $0, on: mapView) }
+
+            if !hasCenteredPlaces, let center = centerCoordinate(for: places) {
+                mapView.moveCamera(NMFCameraUpdate(scrollTo: center, zoomTo: 15))
+                hasCenteredPlaces = true
+            }
+        }
+
+        private func centerCoordinate(for places: [MapPlace]) -> NMGLatLng? {
+            guard
+                let minimumLatitude = places.map(\.latitude).min(),
+                let maximumLatitude = places.map(\.latitude).max(),
+                let minimumLongitude = places.map(\.longitude).min(),
+                let maximumLongitude = places.map(\.longitude).max()
+            else {
+                return nil
+            }
+
+            return NMGLatLng(
+                lat: (minimumLatitude + maximumLatitude) / 2,
+                lng: (minimumLongitude + maximumLongitude) / 2
+            )
         }
 
         private func makeMarker(for place: MapPlace, on mapView: NMFMapView) -> NMFMarker {
@@ -60,4 +82,3 @@ struct NaverMapView: UIViewRepresentable {
         }
     }
 }
-

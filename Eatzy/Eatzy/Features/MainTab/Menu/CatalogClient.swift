@@ -8,6 +8,7 @@ import ComposableArchitecture
 struct CatalogClient {
     var fetch: @Sendable (_ language: String) async throws -> CatalogResponseDTO
     var fetchUniversities: @Sendable () async throws -> UniversitiesResponseDTO
+    var fetchCountries: @Sendable (_ language: String) async throws -> CountriesResponseDTO
 }
 
 extension CatalogClient: DependencyKey {
@@ -17,6 +18,9 @@ extension CatalogClient: DependencyKey {
         },
         fetchUniversities: {
             try await CatalogService().fetchUniversities()
+        },
+        fetchCountries: { language in
+            try await CatalogService().fetchCountries(language: language)
         }
     )
 
@@ -26,6 +30,9 @@ extension CatalogClient: DependencyKey {
         },
         fetchUniversities: {
             UniversitiesResponseDTO(universities: [])
+        },
+        fetchCountries: { _ in
+            CountriesResponseDTO(countries: [])
         }
     )
 }

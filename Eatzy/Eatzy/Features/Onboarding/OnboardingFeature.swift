@@ -6,6 +6,7 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 struct OnboardingFeature: Reducer {
     struct Option: Equatable, Identifiable {
@@ -38,12 +39,16 @@ struct OnboardingFeature: Reducer {
         var step: Step = .university
         var selectedUniversity: Set<String> = []
         var selectedCountry: Set<String> = []
+        var countrySearchText = ""
         var selectedReligions: Set<String> = []
         var selectedDiets: Set<String> = []
         var selectedFoodRestrictions: Set<String> = []
         var universities: [UniversitySummaryDTO] = []
         var isUniversitiesLoading = false
         var universitiesErrorMessage: String?
+        var countries: [CountryDTO] = []
+        var isCountriesLoading = false
+        var countriesErrorMessage: String?
         var taxonomy: DietaryTaxonomyResponseDTO?
         var isTaxonomyLoading = false
         var taxonomyErrorMessage: String?
@@ -76,6 +81,27 @@ struct OnboardingFeature: Reducer {
             return universities.first(where: { $0.code == code })?.nameEn ?? code
         }
 
+        var countryOptions: [String] {
+            countries.map(\.code)
+        }
+
+        var filteredCountries: [CountryDTO] {
+            let query = countrySearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !query.isEmpty else { return countries }
+
+            return countries.filter {
+                $0.name.localizedCaseInsensitiveContains(query) ||
+                    $0.code.localizedCaseInsensitiveContains(query)
+            }
+        }
+
+        var selectedCountryTitle: String {
+            guard let code = selectedCountry.first else {
+                return "Please Select"
+            }
+            return countries.first(where: { $0.code == code })?.name ?? code
+        }
+
         var dietaryProfile: DietaryProfileDTO {
             DietaryProfileDTO(
                 avoidedIngredients: selectedFoodRestrictions
@@ -98,10 +124,14 @@ struct OnboardingFeature: Reducer {
         case viewAppeared
         case universitiesRetryTapped
         case universitiesResponse(Result<UniversitiesResponseDTO, NetworkError>)
+        case countriesRetryTapped
+        case countriesResponse(Result<CountriesResponseDTO, NetworkError>)
         case taxonomyRetryTapped
         case taxonomyResponse(Result<DietaryTaxonomyResponseDTO, NetworkError>)
         case universitySelectionChanged(Set<String>)
         case countrySelectionChanged(Set<String>)
+        case countrySearchTextChanged(String)
+        case countryTapped(String)
         case religionTapped(String)
         case dietTapped(String)
         case foodRestrictionTapped(String)
@@ -138,6 +168,28 @@ struct OnboardingFeature: Reducer {
                             } catch {
                                 await send(
                                     .universitiesResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
+                }
+
+                if state.countries.isEmpty, !state.isCountriesLoading {
+                    state.isCountriesLoading = true
+                    state.countriesErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .countriesResponse(
+                                        .success(try await catalogClient.fetchCountries("en"))
+                                    )
+                                )
+                            } catch {
+                                await send(
+                                    .countriesResponse(
                                         .failure(error as? NetworkError ?? .unknownError)
                                     )
                                 )
@@ -186,6 +238,22 @@ struct OnboardingFeature: Reducer {
                 state.universitiesErrorMessage = error.description
                 return .none
 
+            case .countriesRetryTapped:
+                state.countries = []
+                state.isCountriesLoading = false
+                return .send(.viewAppeared)
+
+            case let .countriesResponse(.success(response)):
+                state.isCountriesLoading = false
+                state.countriesErrorMessage = nil
+                state.countries = response.countries
+                return .none
+
+            case let .countriesResponse(.failure(error)):
+                state.isCountriesLoading = false
+                state.countriesErrorMessage = error.description
+                return .none
+
             case .taxonomyRetryTapped:
                 state.taxonomy = nil
                 state.isTaxonomyLoading = false
@@ -214,6 +282,23 @@ struct OnboardingFeature: Reducer {
                     from: selection,
                     previous: state.selectedCountry
                 )
+                return .none
+
+            case let .countrySearchTextChanged(text):
+                state.countrySearchText = text
+
+                if let selectedCode = state.selectedCountry.first,
+                   let selectedCountry = state.countries.first(where: { $0.code == selectedCode }),
+                   selectedCountry.name != text {
+                    state.selectedCountry = []
+                }
+                return .none
+
+            case let .countryTapped(code):
+                guard state.countries.contains(where: { $0.code == code }) else {
+                    return .none
+                }
+                state.selectedCountry = [code]
                 return .none
 
             case let .religionTapped(religion):
