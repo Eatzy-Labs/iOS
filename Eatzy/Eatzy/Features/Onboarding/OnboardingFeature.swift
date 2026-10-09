@@ -6,6 +6,7 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 struct OnboardingFeature: Reducer {
     struct Option: Equatable, Identifiable {
@@ -38,6 +39,7 @@ struct OnboardingFeature: Reducer {
         var step: Step = .university
         var selectedUniversity: Set<String> = []
         var selectedCountry: Set<String> = []
+        var countrySearchText = ""
         var selectedReligions: Set<String> = []
         var selectedDiets: Set<String> = []
         var selectedFoodRestrictions: Set<String> = []
@@ -83,6 +85,16 @@ struct OnboardingFeature: Reducer {
             countries.map(\.code)
         }
 
+        var filteredCountries: [CountryDTO] {
+            let query = countrySearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !query.isEmpty else { return countries }
+
+            return countries.filter {
+                $0.name.localizedCaseInsensitiveContains(query) ||
+                    $0.code.localizedCaseInsensitiveContains(query)
+            }
+        }
+
         var selectedCountryTitle: String {
             guard let code = selectedCountry.first else {
                 return "Please Select"
@@ -118,6 +130,8 @@ struct OnboardingFeature: Reducer {
         case taxonomyResponse(Result<DietaryTaxonomyResponseDTO, NetworkError>)
         case universitySelectionChanged(Set<String>)
         case countrySelectionChanged(Set<String>)
+        case countrySearchTextChanged(String)
+        case countryTapped(String)
         case religionTapped(String)
         case dietTapped(String)
         case foodRestrictionTapped(String)
@@ -268,6 +282,23 @@ struct OnboardingFeature: Reducer {
                     from: selection,
                     previous: state.selectedCountry
                 )
+                return .none
+
+            case let .countrySearchTextChanged(text):
+                state.countrySearchText = text
+
+                if let selectedCode = state.selectedCountry.first,
+                   let selectedCountry = state.countries.first(where: { $0.code == selectedCode }),
+                   selectedCountry.name != text {
+                    state.selectedCountry = []
+                }
+                return .none
+
+            case let .countryTapped(code):
+                guard state.countries.contains(where: { $0.code == code }) else {
+                    return .none
+                }
+                state.selectedCountry = [code]
                 return .none
 
             case let .religionTapped(religion):
