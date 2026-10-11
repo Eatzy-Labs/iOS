@@ -12,6 +12,7 @@ struct SettingMenuCard: View {
         var value: String? = nil
         var titleColor: Color = .gray900
         var showsChevron = true
+        var showsLinkIcon = false
         var action: () -> Void = {}
     }
 
@@ -39,8 +40,8 @@ struct SettingMenuCard: View {
                                 .foregroundStyle(.gray900)
                         }
 
-                        if item.showsChevron {
-                            Image(.icChevronRight)
+                        if item.showsChevron || item.showsLinkIcon {
+                            Image(item.showsLinkIcon ? .icLink : .icChevronRight)
                                 .renderingMode(.template)
                                 .foregroundStyle(.gray500)
                                 .frame(width: 24, height: 24)

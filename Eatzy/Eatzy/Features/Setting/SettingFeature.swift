@@ -4,6 +4,7 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 struct SettingFeature: Reducer {
     @ObservableState
@@ -22,6 +23,11 @@ struct SettingFeature: Reducer {
         var isLogoutAlertPresented = false
         var isLoggingOut = false
         var logoutErrorMessage: String?
+        var legalDocuments: LegalDocumentsResponseDTO?
+        var isLegalDocumentsLoading = false
+        var legalDocumentsErrorMessage: String?
+        var selectedLegalDocumentURL: URL?
+        var isLegalDocumentPresented = false
 
         init(isAuthenticated: Bool, universityCode: String = "") {
             self.isAuthenticated = isAuthenticated
@@ -42,6 +48,9 @@ struct SettingFeature: Reducer {
         case viewAppeared
         case profileResponse(Result<MeResponseDTO, NetworkError>)
         case countriesResponse(Result<CountriesResponseDTO, NetworkError>)
+        case legalDocumentsResponse(Result<LegalDocumentsResponseDTO, NetworkError>)
+        case legalDocumentTapped(String?)
+        case legalDocumentDismissed
         case backButtonTapped
         case loginButtonTapped
         case logoutButtonTapped
@@ -65,6 +74,7 @@ struct SettingFeature: Reducer {
     @Dependency(\.usersClient) private var usersClient
     @Dependency(\.catalogClient) private var catalogClient
     @Dependency(\.logoutClient) private var logoutClient
+    @Dependency(\.legalDocumentsClient) private var legalDocumentsClient
 
     var body: some Reducer<State, Action> {
         Scope(state: \.profile, action: \.profile) {
@@ -78,11 +88,33 @@ struct SettingFeature: Reducer {
         Reduce { state, action in
             switch action {
             case .viewAppeared:
-                guard state.isAuthenticated else {
-                    return .none
+                var effects: [Effect<Action>] = []
+
+                if state.legalDocuments == nil, !state.isLegalDocumentsLoading {
+                    state.isLegalDocumentsLoading = true
+                    state.legalDocumentsErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .legalDocumentsResponse(
+                                        .success(try await legalDocumentsClient.fetch())
+                                    )
+                                )
+                            } catch {
+                                await send(
+                                    .legalDocumentsResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
                 }
 
-                var effects: [Effect<Action>] = []
+                guard state.isAuthenticated else {
+                    return .merge(effects)
+                }
 
                 if state.me == nil, !state.isProfileLoading {
                     state.isProfileLoading = true
@@ -127,6 +159,27 @@ struct SettingFeature: Reducer {
                 }
 
                 return .merge(effects)
+
+            case let .legalDocumentsResponse(.success(response)):
+                state.isLegalDocumentsLoading = false
+                state.legalDocumentsErrorMessage = nil
+                state.legalDocuments = response
+                return .none
+
+            case let .legalDocumentsResponse(.failure(error)):
+                state.isLegalDocumentsLoading = false
+                state.legalDocumentsErrorMessage = error.description
+                return .none
+
+            case let .legalDocumentTapped(urlString):
+                state.selectedLegalDocumentURL = urlString.flatMap(URL.init(string:))
+                state.isLegalDocumentPresented = true
+                return .none
+
+            case .legalDocumentDismissed:
+                state.selectedLegalDocumentURL = nil
+                state.isLegalDocumentPresented = false
+                return .none
 
             case let .profileResponse(.success(response)):
                 state.isProfileLoading = false
