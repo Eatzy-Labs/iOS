@@ -31,6 +31,7 @@ struct SettingView: View {
         }
         .sheet(isPresented: legalDocumentPresentation) {
             LegalDocumentWebView(url: store.selectedLegalDocumentURL)
+                .padding(.top, 16)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
         }
