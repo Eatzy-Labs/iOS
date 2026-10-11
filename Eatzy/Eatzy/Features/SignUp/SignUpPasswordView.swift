@@ -56,7 +56,11 @@ struct SignUpPasswordView: View {
                         placeholder: "Type here",
                         maximumLength: 64,
                         isSecure: true,
-                        showsCounter: false
+                        showsCounter: false,
+                        showsErrorIcon: false,
+                        onFocusChanged: {
+                            store.send(.confirmedPasswordFocusChanged($0))
+                        }
                     )
                     .padding(.top, 12)
 
