@@ -14,6 +14,7 @@ struct MeResponseDTO: Decodable, Equatable, Sendable {
     let profileId: String?
     let role: String
     let status: String
+    let universityCode: String?
     let universityId: Int
 }
 
@@ -22,17 +23,20 @@ struct UpdateProfileRequestDTO: Encodable, Equatable, Sendable {
     let nickname: String?
     let preferredLanguage: String?
     let profileId: String?
+    let universityCode: String?
 
     init(
         nationality: String? = nil,
         nickname: String? = nil,
         preferredLanguage: String? = nil,
-        profileId: String? = nil
+        profileId: String? = nil,
+        universityCode: String? = nil
     ) {
         self.nationality = nationality
         self.nickname = nickname
         self.preferredLanguage = preferredLanguage
         self.profileId = profileId
+        self.universityCode = universityCode
     }
 }
 
