@@ -12,8 +12,10 @@ struct SettingFeature: Reducer {
         var isAuthenticated: Bool
         var isProfilePresented = false
         var isDietaryPreferencePresented = false
+        var isChangePasswordPresented = false
         var profile: ProfileFeature.State
         var dietaryPreference: DietaryPreferenceFeature.State
+        var changePassword = ChangePasswordFeature.State()
         var me: MeResponseDTO?
         var countries: [CountryDTO] = []
         var isCountriesLoading = false
@@ -60,8 +62,10 @@ struct SettingFeature: Reducer {
         case logoutErrorDismissed
         case profileCardTapped
         case dietaryPreferenceTapped
+        case changePasswordTapped
         case profile(ProfileFeature.Action)
         case dietaryPreference(DietaryPreferenceFeature.Action)
+        case changePassword(ChangePasswordFeature.Action)
         case delegate(Delegate)
 
         enum Delegate {
@@ -83,6 +87,10 @@ struct SettingFeature: Reducer {
 
         Scope(state: \.dietaryPreference, action: \.dietaryPreference) {
             DietaryPreferenceFeature()
+        }
+
+        Scope(state: \.changePassword, action: \.changePassword) {
+            ChangePasswordFeature()
         }
 
         Reduce { state, action in
@@ -277,6 +285,11 @@ struct SettingFeature: Reducer {
                 state.isDietaryPreferencePresented = true
                 return .none
 
+            case .changePasswordTapped:
+                state.changePassword = ChangePasswordFeature.State()
+                state.isChangePasswordPresented = true
+                return .none
+
             case .profile(.delegate(.backRequested)):
                 state.isProfilePresented = false
                 return .none
@@ -293,6 +306,13 @@ struct SettingFeature: Reducer {
                 return .none
 
             case .dietaryPreference:
+                return .none
+
+            case .changePassword(.delegate(.backRequested)):
+                state.isChangePasswordPresented = false
+                return .none
+
+            case .changePassword:
                 return .none
 
             case .delegate:
