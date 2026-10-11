@@ -110,14 +110,9 @@ struct SignUpFeature: Reducer {
                 return .none
 
             case .passwordSubmitted:
-                if !(10...14).contains(state.password.count) {
+                if let message = state.password.passwordValidationErrorMessage {
                     state.isPasswordValidated = false
-                    state.passwordFieldState = .error(message: "Use 10–14 characters")
-                } else if !state.password.hasRequiredPasswordCharacters {
-                    state.isPasswordValidated = false
-                    state.passwordFieldState = .error(
-                        message: "Include at least one letter, number, and special character"
-                    )
+                    state.passwordFieldState = .error(message: message)
                 } else {
                     state.isPasswordValidated = true
                     state.passwordFieldState = .filled
