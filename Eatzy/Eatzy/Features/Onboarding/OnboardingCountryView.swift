@@ -42,17 +42,17 @@ struct OnboardingCountryView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 28)
             } else {
-                EatzyDropdown(
-                    title: store.selectedCountryTitle,
-                    options: store.countryOptions,
-                    selections: Binding(
-                        get: { store.selectedCountry },
-                        set: { store.send(.countrySelectionChanged($0)) }
-                    ),
-                    optionTitle: { code in
-                        store.countries.first(where: { $0.code == code })?.name ?? code
-                    }
-                )
+                VStack(spacing: 8) {
+                    EatzySearchTextField(
+                        text: Binding(
+                            get: { store.countrySearchText },
+                            set: { store.send(.countrySearchTextChanged($0)) }
+                        ),
+                        isSelected: !store.selectedCountry.isEmpty
+                    )
+
+                    countryResults
+                }
                 .padding(.top, 28)
             }
 
@@ -70,5 +70,51 @@ struct OnboardingCountryView: View {
             .padding(.bottom, 16)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+
+    private var countryResults: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(store.filteredCountries, id: \.code) { country in
+                    let isSelected = store.selectedCountry.contains(country.code)
+
+                    Button {
+                        store.send(.countryTapped(country.code))
+                        hideKeyboard()
+                    } label: {
+                        HStack(alignment: .center, spacing: 8) {
+                            Text(country.name)
+                                .applyEatzyFont(isSelected ? .body_18_m : .body_18_r)
+                                .foregroundStyle(.gray900)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            if isSelected {
+                                Image(.icSuccess)
+                                    .frame(width: 24, height: 24)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .frame(maxWidth: .infinity, minHeight: 52, maxHeight: 52)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    Rectangle()
+                        .fill(.gray300)
+                        .frame(height: 1)
+                }
+            }
+        }
+        .scrollIndicators(.hidden)
+        .frame(maxHeight: 240)
+        .background(.coreWhite)
+        .overlay(alignment: .topTrailing) {
+            Capsule()
+                .fill(.gray300)
+                .frame(width: 5, height: 52)
+                .padding(.top, 16)
+                .padding(.trailing, 4)
+                .allowsHitTesting(false)
+        }
     }
 }
