@@ -41,6 +41,7 @@ extension UsersClient: DependencyKey {
             profileId: nil,
             role: "",
             status: "",
+            universityCode: nil,
             universityId: 0
         )
     }

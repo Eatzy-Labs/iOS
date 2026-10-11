@@ -12,8 +12,10 @@ struct ProfileFeature: Reducer {
         var isEditing = false
         var profile: Profile
         var draft: Profile
-        var universities: [String]
+        var universities: [UniversitySummaryDTO]
         var countries: [CountryDTO]
+        var universityCode: String
+        var draftUniversityCode: String
         var nationalityCode: String
         var draftNationalityCode: String
         var idFieldState = EatzyTextfield.State.writing
@@ -26,13 +28,15 @@ struct ProfileFeature: Reducer {
 
         init(
             profile: Profile = ProfileMockData.profile,
-            universities: [String] = ProfileMockData.universities,
+            universities: [UniversitySummaryDTO] = [],
             countries: [CountryDTO] = []
         ) {
             self.profile = profile
             self.draft = profile
             self.universities = universities
             self.countries = countries
+            self.universityCode = ""
+            self.draftUniversityCode = ""
             self.nationalityCode = ""
             self.draftNationalityCode = ""
         }
@@ -79,6 +83,7 @@ struct ProfileFeature: Reducer {
 
             case .editButtonTapped:
                 state.draft = state.profile
+                state.draftUniversityCode = state.universityCode
                 state.draftNationalityCode = state.nationalityCode
                 state.isEditing = true
                 return .none
@@ -97,7 +102,8 @@ struct ProfileFeature: Reducer {
                 state.saveErrorMessage = nil
                 let request = UpdateProfileRequestDTO(
                     nationality: state.draftNationalityCode,
-                    profileId: state.draft.userID
+                    profileId: state.draft.userID,
+                    universityCode: state.draftUniversityCode
                 )
                 return .run { send in
                     do {
@@ -120,10 +126,16 @@ struct ProfileFeature: Reducer {
                 state.saveErrorMessage = nil
                 state.nationalityCode = response.nationality
                 state.draftNationalityCode = response.nationality
+                let universityCode = response.universityCode ?? state.draftUniversityCode
+                state.universityCode = universityCode
+                state.draftUniversityCode = universityCode
                 let profile = Profile(
                     userID: response.profileId ?? response.nickname ?? response.id,
                     email: response.email,
-                    university: state.profile.university,
+                    university: universityName(
+                        for: universityCode,
+                        in: state.universities
+                    ),
                     country: countryName(for: response.nationality, in: state.countries),
                     imageData: state.profile.imageData
                 )
@@ -160,11 +172,15 @@ struct ProfileFeature: Reducer {
                 return .none
 
             case let .universitySelectionChanged(selection):
-                if let university = singleSelection(
+                if let universityCode = singleSelection(
                     from: selection,
-                    previous: [state.draft.university]
+                    previous: [state.draftUniversityCode]
                 ).first {
-                    state.draft.university = university
+                    state.draftUniversityCode = universityCode
+                    state.draft.university = universityName(
+                        for: universityCode,
+                        in: state.universities
+                    )
                 }
                 return .none
 
@@ -205,6 +221,7 @@ struct ProfileFeature: Reducer {
 
             case .discardChangesButtonTapped:
                 state.draft = state.profile
+                state.draftUniversityCode = state.universityCode
                 state.draftNationalityCode = state.nationalityCode
                 state.idFieldState = .writing
                 state.emailFieldState = .writing
@@ -249,5 +266,12 @@ struct ProfileFeature: Reducer {
 
     private func countryName(for code: String, in countries: [CountryDTO]) -> String {
         countries.first(where: { $0.code == code })?.name ?? code
+    }
+
+    private func universityName(
+        for code: String,
+        in universities: [UniversitySummaryDTO]
+    ) -> String {
+        universities.first(where: { $0.code == code })?.nameEn ?? code.uppercased()
     }
 }
