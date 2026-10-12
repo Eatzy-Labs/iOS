@@ -10,10 +10,12 @@ struct EatzyCardMenu: View {
         struct Item {
             let name: String
             let detail: String
+            let isRestricted: Bool
 
-            init(_ name: String, detail: String) {
+            init(_ name: String, detail: String, isRestricted: Bool = false) {
                 self.name = name
                 self.detail = detail
+                self.isRestricted = isRestricted
             }
         }
 
@@ -101,7 +103,8 @@ private extension EatzyCardMenu {
         HStack(alignment: .center, spacing: 8) {
             Text(item.name)
                 .applyEatzyFont(.body_14_r)
-                .foregroundStyle(.coreBlack)
+                .strikethrough(item.isRestricted)
+                .foregroundStyle(item.isRestricted ? .red100 : .coreBlack)
 
             Spacer(minLength: 0)
 

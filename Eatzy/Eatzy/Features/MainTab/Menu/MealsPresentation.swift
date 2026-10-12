@@ -8,7 +8,10 @@ import Foundation
 enum MealsPresentation {
     static func sections(
         for mealType: String,
-        in response: MealsResponseDTO?
+        in response: MealsResponseDTO?,
+        dietaryProfile: DietaryProfileDTO? = nil,
+        taxonomy: DietaryTaxonomyResponseDTO? = nil,
+        appliesDietaryFilter: Bool = true
     ) -> [EatzyCardMenu.Section] {
         guard let meal = response?.meals.first(where: { $0.mealType == mealType }) else {
             return []
@@ -18,7 +21,12 @@ enum MealsPresentation {
             let items = option.items.map { item in
                 EatzyCardMenu.Section.Item(
                     displayName(for: item),
-                    detail: translatedDetail(for: item)
+                    detail: translatedDetail(for: item),
+                    isRestricted: appliesDietaryFilter && isRestricted(
+                        item,
+                        profile: dietaryProfile,
+                        taxonomy: taxonomy
+                    )
                 )
             }
             let notice = nonEmpty(option.notice ?? option.noticeEn ?? option.noticeKo)
@@ -34,7 +42,10 @@ enum MealsPresentation {
 
     static func sheet(
         for sectionID: String,
-        in response: MealsResponseDTO?
+        in response: MealsResponseDTO?,
+        dietaryProfile: DietaryProfileDTO? = nil,
+        taxonomy: DietaryTaxonomyResponseDTO? = nil,
+        appliesDietaryFilter: Bool = true
     ) -> MenuSheet? {
         guard let response else { return nil }
 
@@ -52,6 +63,11 @@ enum MealsPresentation {
                         name: displayName(for: item),
                         detail: translatedDetail(for: item),
                         description: dish?.explanationEn ?? dish?.explanationKo ?? "",
+                        isRestricted: appliesDietaryFilter && isRestricted(
+                            item,
+                            profile: dietaryProfile,
+                            taxonomy: taxonomy
+                        ),
                         imageURLs: dish?.imageUrls ?? [],
                         fallbackImageURLs: dish?.imageFallbackUrls ?? []
                     )
@@ -78,6 +94,36 @@ enum MealsPresentation {
         let displayName = displayName(for: item)
         guard let koreanName = nonEmpty(item.nameKo), koreanName != displayName else { return "" }
         return koreanName
+    }
+
+    private static func isRestricted(
+        _ item: MealItemDTO,
+        profile: DietaryProfileDTO?,
+        taxonomy: DietaryTaxonomyResponseDTO?
+    ) -> Bool {
+        guard let profile, let dietary = item.dish?.dietary else { return false }
+
+        var avoidedIngredients = Set(profile.avoidedIngredients)
+        for dietCode in profile.diets {
+            guard let diet = taxonomy?.diets.first(where: { $0.code == dietCode }) else {
+                continue
+            }
+            avoidedIngredients.formUnion(diet.presetIngredients)
+        }
+
+        let containsAvoidedIngredient = dietary.ingredients?.contains { code, status in
+            avoidedIngredients.contains(code) && status.uppercased() == "PRESENT"
+        } == true
+
+        let exceedsSpiceLevel: Bool
+        if let maximumSpiceLevel = profile.maxSpiceLevel,
+           let spiceLevel = dietary.spiceLevel {
+            exceedsSpiceLevel = spiceLevel > maximumSpiceLevel
+        } else {
+            exceedsSpiceLevel = false
+        }
+
+        return containsAvoidedIngredient || exceedsSpiceLevel
     }
 
     private static func nonEmpty(_ value: String?) -> String? {
