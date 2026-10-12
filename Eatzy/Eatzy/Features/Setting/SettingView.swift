@@ -22,6 +22,13 @@ struct SettingView: View {
                         action: \.dietaryPreference
                     )
                 )
+            } else if store.isDeleteAccountPresented {
+                DeleteAccountView(
+                    store: store.scope(
+                        state: \.deleteAccount,
+                        action: \.deleteAccount
+                    )
+                )
             } else {
                 settingContent
             }
@@ -97,7 +104,9 @@ struct SettingView: View {
                                 .init(title: "Log Out") {
                                     store.send(.logoutButtonTapped)
                                 },
-                                .init(title: "Delete Account", titleColor: .red500)
+                                .init(title: "Delete Account", titleColor: .red500) {
+                                    store.send(.deleteAccountTapped)
+                                }
                             ])
                         }
                     }
