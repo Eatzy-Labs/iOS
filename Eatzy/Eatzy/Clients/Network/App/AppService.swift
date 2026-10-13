@@ -15,4 +15,10 @@ final class AppService {
     func fetchLegalDocuments() async throws -> LegalDocumentsResponseDTO {
         try await service.request(.legalDocuments)
     }
+
+    func fetchVersionRequirement(
+        platform: String
+    ) async throws -> VersionRequirementResponseDTO {
+        try await service.request(.versionRequirement(platform: platform))
+    }
 }

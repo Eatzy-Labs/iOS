@@ -49,6 +49,7 @@ struct MapFeature: Reducer {
         case categoriesResponse(Result<PlaceCategoriesResponseDTO, NetworkError>)
         case universityButtonTapped
         case settingButtonTapped
+        case universityChanged(code: String, name: String)
         case categorySelected(MapPlace.Category)
         case markerTapped(MapPlace.ID)
         case placeDetailResponse(
@@ -167,6 +168,16 @@ struct MapFeature: Reducer {
 
             case .settingButtonTapped:
                 return .send(.delegate(.settingRequested))
+
+            case let .universityChanged(code, name):
+                state.universityCode = code
+                state.selectedUniversity = name
+                state.places = []
+                state.placesErrorMessage = nil
+                state.placeDetailErrorMessage = nil
+                state.isPlaceSheetPresented = false
+                state.isPlacesLoading = false
+                return .send(.viewAppeared)
 
             case let .categorySelected(category):
                 state.selectedCategory = category

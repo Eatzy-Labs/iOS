@@ -282,6 +282,26 @@ struct MainTabFeature: Reducer {
             case .setting(.delegate(.logoutCompleted)):
                 return .send(.delegate(.logoutCompleted))
 
+            case let .setting(.delegate(.universityChanged(code, name))):
+                state.preferredUniversityCode = code
+                state.selectedUniversityCode = code
+                state.mealsResponse = nil
+                state.mealsErrorMessage = nil
+
+                let university = state.catalogUniversities.first {
+                    $0.code == code
+                }
+                state.selectedCafeteriaCode = university?.cafeterias.first?.code ?? ""
+
+                let menuEffect: Effect<Action> = state.catalogUniversities.isEmpty
+                    ? .send(.menuViewAppeared)
+                    : .send(.loadMeals)
+
+                return .merge(
+                    menuEffect,
+                    .send(.map(.universityChanged(code: code, name: name)))
+                )
+
             case .setting:
                 return .none
 

@@ -6,8 +6,14 @@
 //
 
 import ComposableArchitecture
+import Foundation
 
 struct RootFeature: Reducer {
+    enum UpdateAlert: Equatable {
+        case required
+        case recommended
+    }
+
     @ObservableState
     struct State: Equatable {
         enum Route: Equatable {
@@ -23,12 +29,18 @@ struct RootFeature: Reducer {
         var onboarding = OnboardingFeature.State()
         var signUp = SignUpFeature.State()
         var mainTab = MainTabFeature.State()
+        var updateAlert: UpdateAlert?
+        var appStoreURL: URL?
     }
 
     @CasePathable
     enum Action {
         case splashTask
-        case splashFinished(isAuthenticated: Bool)
+        case splashFinished(
+            isAuthenticated: Bool,
+            versionRequirement: VersionRequirementResponseDTO?
+        )
+        case updateAlertDismissed
         case login(LoginFeature.Action)
         case onboarding(OnboardingFeature.Action)
         case signUp(SignUpFeature.Action)
@@ -37,6 +49,7 @@ struct RootFeature: Reducer {
 
     @Dependency(\.continuousClock) private var clock
     @Dependency(\.autoLoginClient) private var autoLoginClient
+    @Dependency(\.appVersionClient) private var appVersionClient
 
     nonisolated private enum CancelID: Hashable, Sendable {
         case splashDelay
@@ -65,15 +78,19 @@ struct RootFeature: Reducer {
                 return .run { send in
                     async let minimumSplashDuration: Void = clock.sleep(for: .seconds(2))
                     async let isAuthenticated = autoLoginClient.restoreSession()
+                    async let versionRequirement = try? appVersionClient.fetchRequirement()
 
                     try await minimumSplashDuration
                     await send(
-                        .splashFinished(isAuthenticated: await isAuthenticated)
+                        .splashFinished(
+                            isAuthenticated: await isAuthenticated,
+                            versionRequirement: await versionRequirement
+                        )
                     )
                 }
                 .cancellable(id: CancelID.splashDelay, cancelInFlight: true)
 
-            case let .splashFinished(isAuthenticated):
+            case let .splashFinished(isAuthenticated, versionRequirement):
                 if isAuthenticated {
                     state.mainTab = MainTabFeature.State(isAuthenticated: true)
                     state.route = .mainTab
@@ -81,6 +98,21 @@ struct RootFeature: Reducer {
                     state.login = LoginFeature.State()
                     state.route = .login
                 }
+
+                if let versionRequirement {
+                    let currentBuild = appVersionClient.currentBuild()
+                    if currentBuild < versionRequirement.minSupportedBuild {
+                        state.updateAlert = .required
+                    } else if currentBuild < versionRequirement.latestBuild {
+                        state.updateAlert = .recommended
+                    }
+                    state.appStoreURL = appVersionClient.appStoreURL()
+                }
+                return .none
+
+            case .updateAlertDismissed:
+                guard state.updateAlert == .recommended else { return .none }
+                state.updateAlert = nil
                 return .none
 
             case .login(.signUpButtonTapped):

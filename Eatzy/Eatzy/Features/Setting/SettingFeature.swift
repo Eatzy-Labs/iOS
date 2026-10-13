@@ -20,6 +20,9 @@ struct SettingFeature: Reducer {
         var countries: [CountryDTO] = []
         var isCountriesLoading = false
         var countriesErrorMessage: String?
+        var universities: [UniversitySummaryDTO] = []
+        var isUniversitiesLoading = false
+        var universitiesErrorMessage: String?
         var isProfileLoading = false
         var profileErrorMessage: String?
         var isLogoutAlertPresented = false
@@ -50,6 +53,7 @@ struct SettingFeature: Reducer {
         case viewAppeared
         case profileResponse(Result<MeResponseDTO, NetworkError>)
         case countriesResponse(Result<CountriesResponseDTO, NetworkError>)
+        case universitiesResponse(Result<UniversitiesResponseDTO, NetworkError>)
         case legalDocumentsResponse(Result<LegalDocumentsResponseDTO, NetworkError>)
         case legalDocumentTapped(String?)
         case legalDocumentDismissed
@@ -72,6 +76,7 @@ struct SettingFeature: Reducer {
             case backRequested
             case loginRequired
             case logoutCompleted
+            case universityChanged(code: String, name: String)
         }
     }
 
@@ -166,6 +171,28 @@ struct SettingFeature: Reducer {
                     )
                 }
 
+                if state.universities.isEmpty, !state.isUniversitiesLoading {
+                    state.isUniversitiesLoading = true
+                    state.universitiesErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                await send(
+                                    .universitiesResponse(
+                                        .success(try await catalogClient.fetchUniversities())
+                                    )
+                                )
+                            } catch {
+                                await send(
+                                    .universitiesResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
+                }
+
                 return .merge(effects)
 
             case let .legalDocumentsResponse(.success(response)):
@@ -194,15 +221,22 @@ struct SettingFeature: Reducer {
                 state.me = response
                 state.profileErrorMessage = nil
 
+                let universityCode = response.universityCode ?? ""
                 let profile = Profile(
                     userID: response.profileId ?? response.nickname ?? response.id,
                     email: response.email,
-                    university: state.profile.profile.university,
+                    university: universityName(
+                        for: universityCode,
+                        in: state.universities,
+                        fallback: state.profile.profile.university
+                    ),
                     country: countryName(for: response.nationality, in: state.countries),
                     imageData: state.profile.profile.imageData
                 )
                 state.profile.profile = profile
                 state.profile.draft = profile
+                state.profile.universityCode = universityCode
+                state.profile.draftUniversityCode = universityCode
                 state.profile.nationalityCode = response.nationality
                 state.profile.draftNationalityCode = response.nationality
                 return .none
@@ -230,6 +264,30 @@ struct SettingFeature: Reducer {
             case let .countriesResponse(.failure(error)):
                 state.isCountriesLoading = false
                 state.countriesErrorMessage = error.description
+                return .none
+
+            case let .universitiesResponse(.success(response)):
+                state.isUniversitiesLoading = false
+                state.universitiesErrorMessage = nil
+                state.universities = response.universities
+                state.profile.universities = response.universities
+
+                if let universityCode = state.me?.universityCode {
+                    let university = universityName(
+                        for: universityCode,
+                        in: response.universities,
+                        fallback: universityCode.uppercased()
+                    )
+                    state.profile.profile.university = university
+                    state.profile.draft.university = university
+                    state.profile.universityCode = universityCode
+                    state.profile.draftUniversityCode = universityCode
+                }
+                return .none
+
+            case let .universitiesResponse(.failure(error)):
+                state.isUniversitiesLoading = false
+                state.universitiesErrorMessage = error.description
                 return .none
 
             case .backButtonTapped:
@@ -296,7 +354,22 @@ struct SettingFeature: Reducer {
 
             case let .profile(.delegate(.profileUpdated(response))):
                 state.me = response
-                return .none
+                guard let universityCode = response.universityCode else {
+                    return .none
+                }
+                let universityName = universityName(
+                    for: universityCode,
+                    in: state.universities,
+                    fallback: universityCode.uppercased()
+                )
+                return .send(
+                    .delegate(
+                        .universityChanged(
+                            code: universityCode,
+                            name: universityName
+                        )
+                    )
+                )
 
             case .profile:
                 return .none
@@ -323,5 +396,14 @@ struct SettingFeature: Reducer {
 
     private func countryName(for code: String, in countries: [CountryDTO]) -> String {
         countries.first(where: { $0.code == code })?.name ?? code
+    }
+
+    private func universityName(
+        for code: String,
+        in universities: [UniversitySummaryDTO],
+        fallback: String
+    ) -> String {
+        guard !code.isEmpty else { return fallback }
+        return universities.first(where: { $0.code == code })?.nameEn ?? fallback
     }
 }
