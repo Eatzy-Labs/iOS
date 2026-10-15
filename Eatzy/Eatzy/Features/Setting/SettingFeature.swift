@@ -12,8 +12,10 @@ struct SettingFeature: Reducer {
         var isAuthenticated: Bool
         var isProfilePresented = false
         var isDietaryPreferencePresented = false
+        var isDeleteAccountPresented = false
         var profile: ProfileFeature.State
         var dietaryPreference: DietaryPreferenceFeature.State
+        var deleteAccount = DeleteAccountFeature.State()
         var me: MeResponseDTO?
         var countries: [CountryDTO] = []
         var isCountriesLoading = false
@@ -64,14 +66,17 @@ struct SettingFeature: Reducer {
         case logoutErrorDismissed
         case profileCardTapped
         case dietaryPreferenceTapped
+        case deleteAccountTapped
         case profile(ProfileFeature.Action)
         case dietaryPreference(DietaryPreferenceFeature.Action)
+        case deleteAccount(DeleteAccountFeature.Action)
         case delegate(Delegate)
 
         enum Delegate {
             case backRequested
             case loginRequired
             case logoutCompleted
+            case deleteAccountCompleted
             case universityChanged(code: String, name: String)
         }
     }
@@ -88,6 +93,10 @@ struct SettingFeature: Reducer {
 
         Scope(state: \.dietaryPreference, action: \.dietaryPreference) {
             DietaryPreferenceFeature()
+        }
+
+        Scope(state: \.deleteAccount, action: \.deleteAccount) {
+            DeleteAccountFeature()
         }
 
         Reduce { state, action in
@@ -335,6 +344,11 @@ struct SettingFeature: Reducer {
                 state.isDietaryPreferencePresented = true
                 return .none
 
+            case .deleteAccountTapped:
+                state.deleteAccount = DeleteAccountFeature.State()
+                state.isDeleteAccountPresented = true
+                return .none
+
             case .profile(.delegate(.backRequested)):
                 state.isProfilePresented = false
                 return .none
@@ -366,6 +380,17 @@ struct SettingFeature: Reducer {
                 return .none
 
             case .dietaryPreference:
+                return .none
+
+            case .deleteAccount(.delegate(.backRequested)):
+                state.isDeleteAccountPresented = false
+                return .none
+
+            case .deleteAccount(.delegate(.deleteAccountCompleted)):
+                state.isDeleteAccountPresented = false
+                return .send(.delegate(.deleteAccountCompleted))
+
+            case .deleteAccount:
                 return .none
 
             case .delegate:

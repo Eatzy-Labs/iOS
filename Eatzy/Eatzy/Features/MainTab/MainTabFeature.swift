@@ -84,6 +84,7 @@ struct MainTabFeature: Reducer {
         enum Delegate {
             case loginRequired
             case logoutCompleted
+            case deleteAccountCompleted
         }
     }
 
@@ -281,6 +282,9 @@ struct MainTabFeature: Reducer {
 
             case .setting(.delegate(.logoutCompleted)):
                 return .send(.delegate(.logoutCompleted))
+
+            case .setting(.delegate(.deleteAccountCompleted)):
+                return .send(.delegate(.deleteAccountCompleted))
 
             case let .setting(.delegate(.universityChanged(code, name))):
                 state.preferredUniversityCode = code

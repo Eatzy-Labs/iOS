@@ -10,13 +10,14 @@ import Moya
 enum UsersAPI: BaseTargetType {
     case me
     case updateProfile(UpdateProfileRequestDTO)
+    case deleteAccount(DeleteAccountRequestDTO)
     case dietaryProfile
     case replaceDietaryProfile(DietaryProfileDTO)
 
     var baseURL: URL { NetworkConfiguration.baseURL }
     var path: String {
         switch self {
-        case .me, .updateProfile:
+        case .me, .updateProfile, .deleteAccount:
             return "/api/v1/users/me"
         case .dietaryProfile, .replaceDietaryProfile:
             return "/api/v1/users/me/dietary-profile"
@@ -28,6 +29,8 @@ enum UsersAPI: BaseTargetType {
             return .get
         case .updateProfile:
             return .patch
+        case .deleteAccount:
+            return .delete
         case .dietaryProfile:
             return .get
         case .replaceDietaryProfile:
@@ -40,6 +43,8 @@ enum UsersAPI: BaseTargetType {
         case .me:
             return .requestPlain
         case let .updateProfile(request):
+            return .requestJSONEncodable(request)
+        case let .deleteAccount(request):
             return .requestJSONEncodable(request)
         case .dietaryProfile:
             return .requestPlain
