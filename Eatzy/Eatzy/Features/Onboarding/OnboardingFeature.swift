@@ -43,7 +43,7 @@ struct OnboardingFeature: Reducer {
         var selectedReligions: Set<String> = []
         var selectedDiets: Set<String> = []
         var selectedFoodRestrictions: Set<String> = []
-        var universities: [UniversitySummaryDTO] = []
+        var universities: [CatalogUniversityDTO] = []
         var isUniversitiesLoading = false
         var universitiesErrorMessage: String?
         var countries: [CountryDTO] = []
@@ -78,7 +78,9 @@ struct OnboardingFeature: Reducer {
             guard let code = selectedUniversity.first else {
                 return "Please Select"
             }
-            return universities.first(where: { $0.code == code })?.nameEn ?? code
+            return universities.first(where: { $0.code == code })?.name
+                ?? universities.first(where: { $0.code == code })?.nameEn
+                ?? code
         }
 
         var countryOptions: [String] {
@@ -123,7 +125,7 @@ struct OnboardingFeature: Reducer {
     enum Action {
         case viewAppeared
         case universitiesRetryTapped
-        case universitiesResponse(Result<UniversitiesResponseDTO, NetworkError>)
+        case universitiesResponse(Result<CatalogResponseDTO, NetworkError>)
         case countriesRetryTapped
         case countriesResponse(Result<CountriesResponseDTO, NetworkError>)
         case taxonomyRetryTapped
@@ -162,7 +164,7 @@ struct OnboardingFeature: Reducer {
                             do {
                                 await send(
                                     .universitiesResponse(
-                                        .success(try await catalogClient.fetchUniversities())
+                                        .success(try await catalogClient.fetch("en"))
                                     )
                                 )
                             } catch {

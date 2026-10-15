@@ -20,7 +20,7 @@ struct SettingFeature: Reducer {
         var countries: [CountryDTO] = []
         var isCountriesLoading = false
         var countriesErrorMessage: String?
-        var universities: [UniversitySummaryDTO] = []
+        var universities: [CatalogUniversityDTO] = []
         var isUniversitiesLoading = false
         var universitiesErrorMessage: String?
         var isProfileLoading = false
@@ -53,7 +53,7 @@ struct SettingFeature: Reducer {
         case viewAppeared
         case profileResponse(Result<MeResponseDTO, NetworkError>)
         case countriesResponse(Result<CountriesResponseDTO, NetworkError>)
-        case universitiesResponse(Result<UniversitiesResponseDTO, NetworkError>)
+        case universitiesResponse(Result<CatalogResponseDTO, NetworkError>)
         case legalDocumentsResponse(Result<LegalDocumentsResponseDTO, NetworkError>)
         case legalDocumentTapped(String?)
         case legalDocumentDismissed
@@ -180,7 +180,7 @@ struct SettingFeature: Reducer {
                             do {
                                 await send(
                                     .universitiesResponse(
-                                        .success(try await catalogClient.fetchUniversities())
+                                        .success(try await catalogClient.fetch("en"))
                                     )
                                 )
                             } catch {
@@ -405,10 +405,11 @@ struct SettingFeature: Reducer {
 
     private func universityName(
         for code: String,
-        in universities: [UniversitySummaryDTO],
+        in universities: [CatalogUniversityDTO],
         fallback: String
     ) -> String {
         guard !code.isEmpty else { return fallback }
-        return universities.first(where: { $0.code == code })?.nameEn ?? fallback
+        let university = universities.first(where: { $0.code == code })
+        return university?.name ?? university?.nameEn ?? fallback
     }
 }
