@@ -9,7 +9,6 @@ import Moya
 
 enum CatalogAPI: BaseTargetType {
     case catalog(language: String)
-    case universities
     case countries(language: String)
 
     var baseURL: URL { NetworkConfiguration.baseURL }
@@ -17,8 +16,6 @@ enum CatalogAPI: BaseTargetType {
         switch self {
         case .catalog:
             return "/api/v1/catalog"
-        case .universities:
-            return "/api/v1/universities"
         case .countries:
             return "/api/v1/countries"
         }
@@ -32,8 +29,6 @@ enum CatalogAPI: BaseTargetType {
                 parameters: ["lang": language],
                 encoding: URLEncoding.queryString
             )
-        case .universities:
-            return .requestPlain
         case let .countries(language):
             return .requestParameters(
                 parameters: ["lang": language],

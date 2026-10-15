@@ -135,7 +135,8 @@ private extension ProfileView {
                     options: store.universities.map(\.code),
                     selections: selectedUniversity,
                     optionTitle: { code in
-                        store.universities.first(where: { $0.code == code })?.nameEn ?? code
+                        let university = store.universities.first(where: { $0.code == code })
+                        return university?.name ?? university?.nameEn ?? code
                     }
                 )
             }
@@ -241,7 +242,7 @@ private extension ProfileView {
         guard !store.draftUniversityCode.isEmpty else { return "Please Select" }
         return store.universities.first {
             $0.code == store.draftUniversityCode
-        }?.nameEn ?? store.draftUniversityCode
+        }.flatMap { $0.name ?? $0.nameEn } ?? store.draftUniversityCode
     }
 
     var selectedCountryTitle: String {
