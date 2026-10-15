@@ -12,9 +12,11 @@ struct SettingFeature: Reducer {
         var isAuthenticated: Bool
         var isProfilePresented = false
         var isDietaryPreferencePresented = false
+        var isDeleteAccountPresented = false
         var isChangePasswordPresented = false
         var profile: ProfileFeature.State
         var dietaryPreference: DietaryPreferenceFeature.State
+        var deleteAccount = DeleteAccountFeature.State()
         var changePassword = ChangePasswordFeature.State()
         var me: MeResponseDTO?
         var countries: [CountryDTO] = []
@@ -66,9 +68,11 @@ struct SettingFeature: Reducer {
         case logoutErrorDismissed
         case profileCardTapped
         case dietaryPreferenceTapped
+        case deleteAccountTapped
         case changePasswordTapped
         case profile(ProfileFeature.Action)
         case dietaryPreference(DietaryPreferenceFeature.Action)
+        case deleteAccount(DeleteAccountFeature.Action)
         case changePassword(ChangePasswordFeature.Action)
         case delegate(Delegate)
 
@@ -76,6 +80,7 @@ struct SettingFeature: Reducer {
             case backRequested
             case loginRequired
             case logoutCompleted
+            case deleteAccountCompleted
             case universityChanged(code: String, name: String)
         }
     }
@@ -92,6 +97,10 @@ struct SettingFeature: Reducer {
 
         Scope(state: \.dietaryPreference, action: \.dietaryPreference) {
             DietaryPreferenceFeature()
+        }
+
+        Scope(state: \.deleteAccount, action: \.deleteAccount) {
+            DeleteAccountFeature()
         }
 
         Scope(state: \.changePassword, action: \.changePassword) {
@@ -343,6 +352,11 @@ struct SettingFeature: Reducer {
                 state.isDietaryPreferencePresented = true
                 return .none
 
+            case .deleteAccountTapped:
+                state.deleteAccount = DeleteAccountFeature.State()
+                state.isDeleteAccountPresented = true
+                return .none
+
             case .changePasswordTapped:
                 state.changePassword = ChangePasswordFeature.State()
                 state.isChangePasswordPresented = true
@@ -379,6 +393,17 @@ struct SettingFeature: Reducer {
                 return .none
 
             case .dietaryPreference:
+                return .none
+
+            case .deleteAccount(.delegate(.backRequested)):
+                state.isDeleteAccountPresented = false
+                return .none
+
+            case .deleteAccount(.delegate(.deleteAccountCompleted)):
+                state.isDeleteAccountPresented = false
+                return .send(.delegate(.deleteAccountCompleted))
+
+            case .deleteAccount:
                 return .none
 
             case .changePassword(.delegate(.backRequested)):

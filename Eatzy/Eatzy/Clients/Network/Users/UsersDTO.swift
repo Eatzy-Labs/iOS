@@ -40,6 +40,10 @@ struct UpdateProfileRequestDTO: Encodable, Equatable, Sendable {
     }
 }
 
+struct DeleteAccountRequestDTO: Encodable, Equatable, Sendable {
+    let password: String
+}
+
 struct ChangePasswordRequestDTO: Encodable, Equatable, Sendable {
     let currentPassword: String
     let newPassword: String
