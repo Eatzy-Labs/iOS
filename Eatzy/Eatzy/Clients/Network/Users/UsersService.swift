@@ -18,6 +18,10 @@ final class UsersService {
         try await service.request(.updateProfile(request))
     }
 
+    func deleteAccount(_ request: DeleteAccountRequestDTO) async throws {
+        try await service.requestWithoutResponse(.deleteAccount(request))
+    }
+
     func replaceDietaryProfile(_ request: DietaryProfileDTO) async throws -> DietaryProfileDTO {
         try await service.request(.replaceDietaryProfile(request))
     }
