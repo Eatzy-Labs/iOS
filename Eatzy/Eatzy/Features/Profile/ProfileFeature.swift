@@ -12,7 +12,7 @@ struct ProfileFeature: Reducer {
         var isEditing = false
         var profile: Profile
         var draft: Profile
-        var universities: [UniversitySummaryDTO]
+        var universities: [CatalogUniversityDTO]
         var countries: [CountryDTO]
         var universityCode: String
         var draftUniversityCode: String
@@ -28,7 +28,7 @@ struct ProfileFeature: Reducer {
 
         init(
             profile: Profile = ProfileMockData.profile,
-            universities: [UniversitySummaryDTO] = [],
+            universities: [CatalogUniversityDTO] = [],
             countries: [CountryDTO] = []
         ) {
             self.profile = profile
@@ -270,8 +270,9 @@ struct ProfileFeature: Reducer {
 
     private func universityName(
         for code: String,
-        in universities: [UniversitySummaryDTO]
+        in universities: [CatalogUniversityDTO]
     ) -> String {
-        universities.first(where: { $0.code == code })?.nameEn ?? code.uppercased()
+        let university = universities.first(where: { $0.code == code })
+        return university?.name ?? university?.nameEn ?? code.uppercased()
     }
 }

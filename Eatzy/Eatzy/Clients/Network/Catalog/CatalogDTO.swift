@@ -9,18 +9,6 @@ struct CatalogResponseDTO: Decodable, Equatable, Sendable {
     let universities: [CatalogUniversityDTO]
 }
 
-struct UniversitiesResponseDTO: Decodable, Equatable, Sendable {
-    let universities: [UniversitySummaryDTO]
-}
-
-struct UniversitySummaryDTO: Decodable, Equatable, Sendable {
-    let code: String
-    let nameEn: String
-    let nameKo: String
-    let region: String
-    let schoolType: String
-}
-
 struct CountriesResponseDTO: Decodable, Equatable, Sendable {
     let countries: [CountryDTO]
 }
