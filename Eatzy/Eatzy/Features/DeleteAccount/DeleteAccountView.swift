@@ -12,12 +12,34 @@ struct DeleteAccountView: View {
     let store: StoreOf<DeleteAccountFeature>
 
     var body: some View {
-        VStack(spacing: 0) {
-            EatzyNavigationBar(
-                leading: .back {
-                    store.send(.backButtonTapped)
+        content
+            .alert(
+                "Delete Your Account?",
+                isPresented: confirmationPresentation
+            ) {
+                SecureField("Current Password", text: currentPasswordBinding)
+
+                Button("Cancel", role: .cancel) {
+                    store.send(.confirmationCancelled)
                 }
-            )
+
+                Button("Delete", role: .destructive) {
+                    store.send(.deleteConfirmed)
+                }
+                .disabled(store.currentPassword.isEmpty || store.isDeleting)
+            } message: {
+                Text(
+                    store.passwordErrorMessage
+                        ?? "This action cannot be undone.\nEnter your current password to confirm account deletion."
+                )
+            }
+    }
+}
+
+private extension DeleteAccountView {
+    var content: some View {
+        VStack(spacing: 0) {
+            EatzyNavigationBar(leading: .back { store.send(.backButtonTapped) })
 
             ScrollViewReader { proxy in
                 ScrollView {
@@ -80,15 +102,31 @@ struct DeleteAccountView: View {
         .background(.coreWhite)
         .hideKeyboardOnBackgroundTap()
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            EatzyCTAButton(
-                "Delete Account",
-                state: store.canDelete ? .active : .inactive
-            ) {
-                store.send(.deleteAccountButtonTapped)
+            if !store.isConfirmationPresented {
+                EatzyCTAButton(
+                    "Delete Account",
+                    state: store.canDelete ? .active : .inactive
+                ) {
+                    store.send(.deleteAccountButtonTapped)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 16)
+                .background(.coreWhite)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 16)
-            .background(.coreWhite)
         }
+    }
+
+    var currentPasswordBinding: Binding<String> {
+        Binding(
+            get: { store.currentPassword },
+            set: { store.send(.currentPasswordChanged($0)) }
+        )
+    }
+
+    var confirmationPresentation: Binding<Bool> {
+        Binding(
+            get: { store.isConfirmationPresented },
+            set: { _ in }
+        )
     }
 }

@@ -26,6 +26,10 @@ struct DeleteAccountFeature: Reducer {
         var selectedReason: String?
         var otherReasonText = ""
         var otherReasonErrorMessage: String?
+        var isConfirmationPresented = false
+        var currentPassword = ""
+        var passwordErrorMessage: String?
+        var isDeleting = false
 
         var canDelete: Bool {
             selectedReason != nil
@@ -37,12 +41,19 @@ struct DeleteAccountFeature: Reducer {
         case reasonSelected(String?)
         case otherReasonChanged(String)
         case deleteAccountButtonTapped
+        case confirmationCancelled
+        case currentPasswordChanged(String)
+        case deleteConfirmed
+        case deleteResponse(Result<Void, NetworkError>)
         case delegate(Delegate)
 
         enum Delegate {
             case backRequested
+            case deleteAccountCompleted
         }
     }
+
+    @Dependency(\.deleteAccountClient) private var deleteAccountClient
 
     var body: some Reducer<State, Action> {
         Reduce { state, action in
@@ -64,7 +75,57 @@ struct DeleteAccountFeature: Reducer {
                 if state.selectedReason == State.otherReason,
                    state.otherReasonText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     state.otherReasonErrorMessage = "Please enter content"
+                    return .none
                 }
+                state.currentPassword = ""
+                state.passwordErrorMessage = nil
+                state.isConfirmationPresented = true
+                return .none
+
+            case .confirmationCancelled:
+                guard !state.isDeleting else { return .none }
+                state.isConfirmationPresented = false
+                state.currentPassword = ""
+                state.passwordErrorMessage = nil
+                return .none
+
+            case let .currentPasswordChanged(password):
+                state.currentPassword = password
+                state.passwordErrorMessage = nil
+                return .none
+
+            case .deleteConfirmed:
+                let password = state.currentPassword
+                guard !password.isEmpty, !state.isDeleting else { return .none }
+                state.isConfirmationPresented = false
+                state.isDeleting = true
+                return .run { send in
+                    do {
+                        try await deleteAccountClient.delete(password)
+                        await send(.deleteResponse(.success(())))
+                    } catch {
+                        await send(
+                            .deleteResponse(
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+
+            case .deleteResponse(.success):
+                state.isDeleting = false
+                state.isConfirmationPresented = false
+                return .send(.delegate(.deleteAccountCompleted))
+
+            case let .deleteResponse(.failure(error)):
+                state.isDeleting = false
+                if case let .apiError(code, _) = error,
+                   code == "MEMBER_WRONG_PASSWORD" {
+                    state.passwordErrorMessage = "Incorrect password. Please try again."
+                } else {
+                    state.passwordErrorMessage = error.description
+                }
+                state.isConfirmationPresented = true
                 return .none
 
             case .delegate:

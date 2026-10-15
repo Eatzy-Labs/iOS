@@ -76,6 +76,7 @@ struct SettingFeature: Reducer {
             case backRequested
             case loginRequired
             case logoutCompleted
+            case deleteAccountCompleted
             case universityChanged(code: String, name: String)
         }
     }
@@ -384,6 +385,10 @@ struct SettingFeature: Reducer {
             case .deleteAccount(.delegate(.backRequested)):
                 state.isDeleteAccountPresented = false
                 return .none
+
+            case .deleteAccount(.delegate(.deleteAccountCompleted)):
+                state.isDeleteAccountPresented = false
+                return .send(.delegate(.deleteAccountCompleted))
 
             case .deleteAccount:
                 return .none
