@@ -22,6 +22,12 @@ final class UsersService {
         try await service.requestWithoutResponse(.deleteAccount(request))
     }
 
+    func verifyPassword(
+        _ request: VerifyPasswordRequestDTO
+    ) async throws -> VerifyPasswordResponseDTO {
+        try await service.request(.verifyPassword(request))
+    }
+
     func changePassword(_ request: ChangePasswordRequestDTO) async throws {
         try await service.requestWithoutResponse(.changePassword(request))
     }

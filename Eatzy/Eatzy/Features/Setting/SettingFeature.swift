@@ -410,6 +410,10 @@ struct SettingFeature: Reducer {
                 state.isChangePasswordPresented = false
                 return .none
 
+            case .changePassword(.delegate(.passwordChanged)):
+                state.isChangePasswordPresented = false
+                return .none
+
             case .changePassword:
                 return .none
 
