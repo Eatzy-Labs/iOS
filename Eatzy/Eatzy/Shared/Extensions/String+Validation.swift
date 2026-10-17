@@ -25,4 +25,16 @@ extension String {
 
         return hasLetter && hasNumber && hasSpecialCharacter
     }
+
+    var passwordValidationErrorMessage: String? {
+        if !(10...14).contains(count) {
+            return "Use 10–14 characters"
+        }
+
+        if !hasRequiredPasswordCharacters {
+            return "Include at least one letter, number, and special character"
+        }
+
+        return nil
+    }
 }

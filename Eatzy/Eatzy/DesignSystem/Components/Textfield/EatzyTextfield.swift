@@ -21,9 +21,11 @@ struct EatzyTextfield: View {
     private let showsErrorIcon: Bool
     private let keyboardType: UIKeyboardType
     private let onSubmit: () -> Void
+    private let onFocusChanged: (Bool) -> Void
 
     @Binding private var text: String
     @Binding private var state: State
+    @FocusState private var isFocused: Bool
 
     init(
         text: Binding<String>,
@@ -34,7 +36,8 @@ struct EatzyTextfield: View {
         showsCounter: Bool = true,
         showsErrorIcon: Bool = true,
         keyboardType: UIKeyboardType = .default,
-        onSubmit: @escaping () -> Void = {}
+        onSubmit: @escaping () -> Void = {},
+        onFocusChanged: @escaping (Bool) -> Void = { _ in }
     ) {
         self._text = text
         self._state = state
@@ -45,6 +48,7 @@ struct EatzyTextfield: View {
         self.showsErrorIcon = showsErrorIcon
         self.keyboardType = keyboardType
         self.onSubmit = onSubmit
+        self.onFocusChanged = onFocusChanged
     }
 
     var body: some View {
@@ -57,6 +61,9 @@ struct EatzyTextfield: View {
         }
         .onChange(of: text) { oldValue, newValue in
             handleTextChange(from: oldValue, to: newValue)
+        }
+        .onChange(of: isFocused) { _, isFocused in
+            onFocusChanged(isFocused)
         }
     }
 }
@@ -115,9 +122,11 @@ private extension EatzyTextfield {
     var inputControl: some View {
         if isSecure {
             SecureField("", text: $text)
+                .focused($isFocused)
                 .textContentType(.password)
         } else {
             TextField("", text: $text)
+                .focused($isFocused)
                 .keyboardType(keyboardType)
                 .textInputAutocapitalization(keyboardType == .emailAddress ? .never : .sentences)
                 .autocorrectionDisabled(keyboardType == .emailAddress)

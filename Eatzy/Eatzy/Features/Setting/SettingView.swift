@@ -29,6 +29,13 @@ struct SettingView: View {
                         action: \.deleteAccount
                     )
                 )
+            } else if store.isChangePasswordPresented {
+                ChangePasswordView(
+                    store: store.scope(
+                        state: \.changePassword,
+                        action: \.changePassword
+                    )
+                )
             } else {
                 settingContent
             }
@@ -100,7 +107,9 @@ struct SettingView: View {
                     if store.isAuthenticated {
                         settingSection("ACCOUNT") {
                             SettingMenuCard(items: [
-                                .init(title: "Change Password"),
+                                .init(title: "Change Password") {
+                                    store.send(.changePasswordTapped)
+                                },
                                 .init(title: "Log Out") {
                                     store.send(.logoutButtonTapped)
                                 },

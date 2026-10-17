@@ -58,6 +58,7 @@ struct SignUpFeature: Reducer {
         case passwordSubmitted
         case confirmedPasswordChanged(String)
         case confirmedPasswordFieldStateChanged(EatzyTextfield.State)
+        case confirmedPasswordFocusChanged(Bool)
         case continueButtonTapped
         case signUpResponse(Result<SignUpResponseDTO, NetworkError>)
         case loginResponse(Result<Void, NetworkError>)
@@ -109,14 +110,9 @@ struct SignUpFeature: Reducer {
                 return .none
 
             case .passwordSubmitted:
-                if !(10...14).contains(state.password.count) {
+                if let message = state.password.passwordValidationErrorMessage {
                     state.isPasswordValidated = false
-                    state.passwordFieldState = .error(message: "Use 10–14 characters")
-                } else if !state.password.hasRequiredPasswordCharacters {
-                    state.isPasswordValidated = false
-                    state.passwordFieldState = .error(
-                        message: "Include at least one letter, number, and special character"
-                    )
+                    state.passwordFieldState = .error(message: message)
                 } else {
                     state.isPasswordValidated = true
                     state.passwordFieldState = .filled
@@ -126,11 +122,25 @@ struct SignUpFeature: Reducer {
             case let .confirmedPasswordChanged(password):
                 state.confirmedPassword = password
                 state.errorMessage = nil
-                state.confirmedPasswordFieldState = password.isEmpty ? .placeholder : .filled
+                state.confirmedPasswordFieldState = password.isEmpty ? .placeholder : .writing
                 return .none
 
             case let .confirmedPasswordFieldStateChanged(fieldState):
                 state.confirmedPasswordFieldState = fieldState
+                return .none
+
+            case let .confirmedPasswordFocusChanged(isFocused):
+                guard !isFocused, !state.confirmedPassword.isEmpty else {
+                    return .none
+                }
+
+                if state.confirmedPassword == state.password {
+                    state.confirmedPasswordFieldState = .filled
+                } else {
+                    state.confirmedPasswordFieldState = .error(
+                        message: "Passwords don’t match"
+                    )
+                }
                 return .none
 
             case .continueButtonTapped:

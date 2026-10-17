@@ -11,6 +11,8 @@ enum UsersAPI: BaseTargetType {
     case me
     case updateProfile(UpdateProfileRequestDTO)
     case deleteAccount(DeleteAccountRequestDTO)
+    case verifyPassword(VerifyPasswordRequestDTO)
+    case changePassword(ChangePasswordRequestDTO)
     case dietaryProfile
     case replaceDietaryProfile(DietaryProfileDTO)
 
@@ -19,6 +21,10 @@ enum UsersAPI: BaseTargetType {
         switch self {
         case .me, .updateProfile, .deleteAccount:
             return "/api/v1/users/me"
+        case .changePassword:
+            return "/api/v1/users/me/password"
+        case .verifyPassword:
+            return "/api/v1/users/me/password/verify"
         case .dietaryProfile, .replaceDietaryProfile:
             return "/api/v1/users/me/dietary-profile"
         }
@@ -31,6 +37,8 @@ enum UsersAPI: BaseTargetType {
             return .patch
         case .deleteAccount:
             return .delete
+        case .verifyPassword, .changePassword:
+            return .post
         case .dietaryProfile:
             return .get
         case .replaceDietaryProfile:
@@ -45,6 +53,10 @@ enum UsersAPI: BaseTargetType {
         case let .updateProfile(request):
             return .requestJSONEncodable(request)
         case let .deleteAccount(request):
+            return .requestJSONEncodable(request)
+        case let .verifyPassword(request):
+            return .requestJSONEncodable(request)
+        case let .changePassword(request):
             return .requestJSONEncodable(request)
         case .dietaryProfile:
             return .requestPlain

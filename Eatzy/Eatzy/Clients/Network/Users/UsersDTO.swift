@@ -44,6 +44,20 @@ struct DeleteAccountRequestDTO: Encodable, Equatable, Sendable {
     let password: String
 }
 
+struct VerifyPasswordRequestDTO: Encodable, Equatable, Sendable {
+    let currentPassword: String
+}
+
+struct VerifyPasswordResponseDTO: Decodable, Equatable, Sendable {
+    let expiresAt: String
+    let passwordChangeToken: String
+}
+
+struct ChangePasswordRequestDTO: Encodable, Equatable, Sendable {
+    let newPassword: String
+    let passwordChangeToken: String
+}
+
 struct DietaryProfileDTO: Codable, Equatable, Sendable {
     let avoidedIngredients: [String]
     let diets: [String]
