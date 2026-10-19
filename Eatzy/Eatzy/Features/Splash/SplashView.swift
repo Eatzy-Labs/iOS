@@ -12,7 +12,8 @@ struct SplashView: View {
                 .ignoresSafeArea()
 
             SplashLottieView()
-                .frame(width: 375, height: 137)
+                .aspectRatio(375.0 / 137.0, contentMode: .fit)
+                .frame(maxWidth: .infinity)
         }
     }
 }
