@@ -9,7 +9,7 @@ struct MapFeature: Reducer {
     @ObservableState
     struct State: Equatable {
         var universityCode: String
-        var selectedUniversity = "Kyungpook Univ"
+        var selectedUniversity = ""
         var places: [MapPlace] = []
         var categoryOptions: [MapPlace.CategoryOption] = []
         var selectedCategory: MapPlace.Category = .all
@@ -35,7 +35,7 @@ struct MapFeature: Reducer {
             [.init(category: .all, title: "All")] + categoryOptions
         }
 
-        init(universityCode: String = "knu") {
+        init(universityCode: String = "") {
             self.universityCode = universityCode
         }
     }
@@ -79,7 +79,9 @@ struct MapFeature: Reducer {
                 state.isVisible = true
                 var effects: [Effect<Action>] = []
 
-                if !state.isPlacesLoading, state.places.isEmpty {
+                if !state.universityCode.isEmpty,
+                   !state.isPlacesLoading,
+                   state.places.isEmpty {
                     state.isPlacesLoading = true
                     state.placesErrorMessage = nil
                     let universityCode = state.universityCode

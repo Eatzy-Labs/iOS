@@ -33,7 +33,7 @@ struct MainTabFeature: Reducer {
         var map: MapFeature.State
         var setting: SettingFeature.State
 
-        init(isAuthenticated: Bool = true, universityCode: String = "knu") {
+        init(isAuthenticated: Bool = true, universityCode: String = "") {
             preferredUniversityCode = universityCode
             selectedUniversityCode = universityCode
             map = MapFeature.State(universityCode: universityCode)
@@ -141,8 +141,12 @@ struct MainTabFeature: Reducer {
                     $0.code == state.selectedUniversityCode
                 } ?? response.universities.first {
                     $0.code == state.preferredUniversityCode
-                } ?? response.universities.first
+                }
                 state.selectedUniversityCode = university?.code ?? ""
+                state.map.universityCode = university?.code ?? ""
+                state.map.selectedUniversity = university.map {
+                    $0.name ?? $0.nameEn ?? $0.nameKo ?? $0.code.uppercased()
+                } ?? ""
                 let containsSelectedCafeteria = university?.cafeterias.contains {
                     $0.code == state.selectedCafeteriaCode
                 } == true
