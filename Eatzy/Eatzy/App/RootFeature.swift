@@ -166,7 +166,9 @@ struct RootFeature: Reducer {
                 guard state.onboarding.entryPoint == .signUp else {
                     state.mainTab = MainTabFeature.State(
                         isAuthenticated: false,
-                        universityCode: state.onboarding.selectedUniversityCode ?? ""
+                        universityCode: state.onboarding.selectedUniversityCode ?? "",
+                        dietaryProfile: state.onboarding.dietaryProfile,
+                        dietaryTaxonomy: state.onboarding.taxonomy
                     )
                     state.route = .mainTab
                     return .none

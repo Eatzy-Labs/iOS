@@ -37,13 +37,23 @@ struct MainTabFeature: Reducer {
         var map: MapFeature.State
         var setting: SettingFeature.State
 
-        init(isAuthenticated: Bool = true, universityCode: String = "") {
+        init(
+            isAuthenticated: Bool = true,
+            universityCode: String = "",
+            dietaryProfile: DietaryProfileDTO? = nil,
+            dietaryTaxonomy: DietaryTaxonomyResponseDTO? = nil
+        ) {
             preferredUniversityCode = universityCode
             selectedUniversityCode = universityCode
+            self.dietaryProfile = dietaryProfile
+            self.dietaryTaxonomy = dietaryTaxonomy
+            hasLoadedDietaryFilter = dietaryProfile != nil && dietaryTaxonomy != nil
             map = MapFeature.State(universityCode: universityCode)
             setting = SettingFeature.State(
                 isAuthenticated: isAuthenticated,
-                universityCode: universityCode
+                universityCode: universityCode,
+                dietaryProfile: dietaryProfile,
+                dietaryTaxonomy: dietaryTaxonomy
             )
         }
 

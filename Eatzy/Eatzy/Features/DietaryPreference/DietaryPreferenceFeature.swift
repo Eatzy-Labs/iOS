@@ -29,8 +29,24 @@ struct DietaryPreferenceFeature: Reducer {
         var errorMessage: String?
         var saveErrorMessage: String?
 
-        init(isAuthenticated: Bool = true) {
+        init(
+            isAuthenticated: Bool = true,
+            dietaryProfile: DietaryProfileDTO? = nil,
+            taxonomy: DietaryTaxonomyResponseDTO? = nil
+        ) {
             self.isAuthenticated = isAuthenticated
+            self.taxonomy = taxonomy
+
+            guard let dietaryProfile else { return }
+
+            selectedReligions = dietaryProfile.religion.map { [$0] } ?? []
+            selectedDiets = Set(dietaryProfile.diets)
+            selectedRestrictions = Set(dietaryProfile.avoidedIngredients)
+            savedReligions = selectedReligions
+            savedDiets = selectedDiets
+            savedRestrictions = selectedRestrictions
+            maxSpiceLevel = dietaryProfile.maxSpiceLevel
+            hasLoadedDietaryProfile = true
         }
 
         var religionOptions: [String] {
