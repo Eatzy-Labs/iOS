@@ -84,7 +84,7 @@ private extension DietaryPreferenceView {
             .padding(.horizontal, 20)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("Dietary Preference")
+                Text("Food Restriction")
                     .applyEatzyFont(.display_16_sb)
                     .foregroundStyle(.gray900)
                     .padding(.horizontal, 20)
