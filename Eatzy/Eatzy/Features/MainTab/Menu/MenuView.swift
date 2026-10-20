@@ -173,15 +173,25 @@ private extension MenuView {
     }
 
     var breakfastSections: [EatzyCardMenu.Section] {
-        MealsPresentation.sections(for: "breakfast", in: store.mealsResponse)
+        mealSections(for: "breakfast")
     }
 
     var lunchSections: [EatzyCardMenu.Section] {
-        MealsPresentation.sections(for: "lunch", in: store.mealsResponse)
+        mealSections(for: "lunch")
     }
 
     var dinnerSections: [EatzyCardMenu.Section] {
-        MealsPresentation.sections(for: "dinner", in: store.mealsResponse)
+        mealSections(for: "dinner")
+    }
+
+    func mealSections(for mealType: String) -> [EatzyCardMenu.Section] {
+        MealsPresentation.sections(
+            for: mealType,
+            in: store.mealsResponse,
+            dietaryProfile: store.dietaryProfile,
+            taxonomy: store.dietaryTaxonomy,
+            appliesDietaryFilter: store.setting.dietaryPreference.savedShowsOnMenu
+        )
     }
 
 }

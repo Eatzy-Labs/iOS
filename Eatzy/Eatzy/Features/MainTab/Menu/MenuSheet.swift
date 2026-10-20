@@ -9,6 +9,7 @@ struct MenuSheet: Equatable {
         let name: String
         let detail: String
         let description: String
+        let isRestricted: Bool
         let imageNames: [String]
         let imageURLs: [String]
         let fallbackImageURLs: [String]
@@ -18,6 +19,7 @@ struct MenuSheet: Equatable {
             name: String,
             detail: String,
             description: String,
+            isRestricted: Bool = false,
             imageNames: [String] = [],
             imageURLs: [String] = [],
             fallbackImageURLs: [String] = []
@@ -26,6 +28,7 @@ struct MenuSheet: Equatable {
             self.name = name
             self.detail = detail
             self.description = description
+            self.isRestricted = isRestricted
             self.imageNames = imageNames
             self.imageURLs = imageURLs
             self.fallbackImageURLs = fallbackImageURLs

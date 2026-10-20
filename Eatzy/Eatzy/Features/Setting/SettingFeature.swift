@@ -82,6 +82,7 @@ struct SettingFeature: Reducer {
             case logoutCompleted
             case deleteAccountCompleted
             case universityChanged(code: String, name: String)
+            case dietaryProfileUpdated(DietaryProfileDTO)
         }
     }
 
@@ -391,6 +392,9 @@ struct SettingFeature: Reducer {
             case .dietaryPreference(.delegate(.backRequested)):
                 state.isDietaryPreferencePresented = false
                 return .none
+
+            case let .dietaryPreference(.delegate(.profileUpdated(profile))):
+                return .send(.delegate(.dietaryProfileUpdated(profile)))
 
             case .dietaryPreference:
                 return .none

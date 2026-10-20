@@ -38,8 +38,10 @@ struct RootFeature: Reducer {
         case splashTask
         case splashFinished(
             isAuthenticated: Bool,
+            universityCode: String?,
             versionRequirement: VersionRequirementResponseDTO?
         )
+        case authenticatedUserLoaded(String?)
         case updateAlertDismissed
         case login(LoginFeature.Action)
         case onboarding(OnboardingFeature.Action)
@@ -50,6 +52,7 @@ struct RootFeature: Reducer {
     @Dependency(\.continuousClock) private var clock
     @Dependency(\.autoLoginClient) private var autoLoginClient
     @Dependency(\.appVersionClient) private var appVersionClient
+    @Dependency(\.usersClient) private var usersClient
 
     nonisolated private enum CancelID: Hashable, Sendable {
         case splashDelay
@@ -80,19 +83,32 @@ struct RootFeature: Reducer {
                     async let isAuthenticated = autoLoginClient.restoreSession()
                     async let versionRequirement = try? appVersionClient.fetchRequirement()
 
+                    let authenticated = await isAuthenticated
+                    let universityCode: String?
+                    if authenticated {
+                        let profile = try? await usersClient.fetchMe()
+                        universityCode = profile?.universityCode
+                    } else {
+                        universityCode = nil
+                    }
+
                     try await minimumSplashDuration
                     await send(
                         .splashFinished(
-                            isAuthenticated: await isAuthenticated,
+                            isAuthenticated: authenticated,
+                            universityCode: universityCode,
                             versionRequirement: await versionRequirement
                         )
                     )
                 }
                 .cancellable(id: CancelID.splashDelay, cancelInFlight: true)
 
-            case let .splashFinished(isAuthenticated, versionRequirement):
+            case let .splashFinished(isAuthenticated, universityCode, versionRequirement):
                 if isAuthenticated {
-                    state.mainTab = MainTabFeature.State(isAuthenticated: true)
+                    state.mainTab = MainTabFeature.State(
+                        isAuthenticated: true,
+                        universityCode: universityCode ?? ""
+                    )
                     state.route = .mainTab
                 } else {
                     state.login = LoginFeature.State()
@@ -126,7 +142,16 @@ struct RootFeature: Reducer {
                 return .none
 
             case .login(.delegate(.loginCompleted)):
-                state.mainTab = MainTabFeature.State(isAuthenticated: true)
+                return .run { send in
+                    let profile = try? await usersClient.fetchMe()
+                    await send(.authenticatedUserLoaded(profile?.universityCode))
+                }
+
+            case let .authenticatedUserLoaded(universityCode):
+                state.mainTab = MainTabFeature.State(
+                    isAuthenticated: true,
+                    universityCode: universityCode ?? ""
+                )
                 state.route = .mainTab
                 return .none
 
@@ -141,7 +166,7 @@ struct RootFeature: Reducer {
                 guard state.onboarding.entryPoint == .signUp else {
                     state.mainTab = MainTabFeature.State(
                         isAuthenticated: false,
-                        universityCode: state.onboarding.selectedUniversityCode ?? "knu"
+                        universityCode: state.onboarding.selectedUniversityCode ?? ""
                     )
                     state.route = .mainTab
                     return .none

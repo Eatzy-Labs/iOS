@@ -16,7 +16,14 @@ struct DietaryPreferenceView: View {
             EatzyNavigationBar(
                 leading: .back {
                     store.send(.backButtonTapped)
-                }
+                },
+                trailing: store.hasChanges
+                    ? [
+                        .text("Done", color: .orange500) {
+                            store.send(.doneButtonTapped)
+                        }
+                    ]
+                    : []
             )
 
             ScrollView(.vertical) {
@@ -57,10 +64,46 @@ struct DietaryPreferenceView: View {
         .task {
             await store.send(.viewAppeared).finish()
         }
+        .alert("Discard changes?", isPresented: discardAlertPresentation) {
+            Button("Cancel", role: .cancel) {
+                store.send(.cancelDiscardButtonTapped)
+            }
+
+            Button("Discard", role: .destructive) {
+                store.send(.discardChangesButtonTapped)
+            }
+        } message: {
+            Text("Your changes will not be saved")
+        }
+        .alert("Unable to save changes", isPresented: saveErrorPresentation) {
+            Button("OK") {
+                store.send(.saveErrorDismissed)
+            }
+        } message: {
+            Text(store.saveErrorMessage ?? "")
+        }
     }
 }
 
 private extension DietaryPreferenceView {
+    var discardAlertPresentation: Binding<Bool> {
+        Binding(
+            get: { store.isDiscardAlertPresented },
+            set: { store.send(.discardAlertPresentationChanged($0)) }
+        )
+    }
+
+    var saveErrorPresentation: Binding<Bool> {
+        Binding(
+            get: { store.saveErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    store.send(.saveErrorDismissed)
+                }
+            }
+        )
+    }
+
     var preferenceContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             dropdownSection(
@@ -84,7 +127,7 @@ private extension DietaryPreferenceView {
             .padding(.horizontal, 20)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("Dietary Preference")
+                Text("Food Restriction")
                     .applyEatzyFont(.display_16_sb)
                     .foregroundStyle(.gray900)
                     .padding(.horizontal, 20)
