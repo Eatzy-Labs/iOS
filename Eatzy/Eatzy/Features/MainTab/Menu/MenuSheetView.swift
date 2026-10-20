@@ -45,7 +45,8 @@ private extension MenuSheetView {
                 HStack(alignment: .center, spacing: 8) {
                     Text(dish.name)
                         .applyEatzyFont(.body_16_m)
-                        .foregroundStyle(.gray900)
+                        .strikethrough(dish.isRestricted)
+                        .foregroundStyle(dish.isRestricted ? .red500 : .gray900)
 
                     Spacer(minLength: 0)
 

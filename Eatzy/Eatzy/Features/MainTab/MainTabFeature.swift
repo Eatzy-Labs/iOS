@@ -25,6 +25,10 @@ struct MainTabFeature: Reducer {
         var isCatalogLoading = false
         var catalogErrorMessage: String?
         var mealsResponse: MealsResponseDTO?
+        var dietaryProfile: DietaryProfileDTO?
+        var dietaryTaxonomy: DietaryTaxonomyResponseDTO?
+        var isDietaryFilterLoading = false
+        var hasLoadedDietaryFilter = false
         var isMealsLoading = false
         var mealsErrorMessage: String?
         var isMenuSheetPresented = false
@@ -61,6 +65,8 @@ struct MainTabFeature: Reducer {
     enum Action {
         case tabSelected(State.Tab)
         case menuViewAppeared
+        case dietaryProfileResponse(Result<DietaryProfileDTO, NetworkError>)
+        case dietaryTaxonomyResponse(Result<DietaryTaxonomyResponseDTO, NetworkError>)
         case catalogRetryTapped
         case catalogResponse(Result<CatalogResponseDTO, NetworkError>)
         case loadMeals
@@ -90,6 +96,8 @@ struct MainTabFeature: Reducer {
 
     @Dependency(\.catalogClient) private var catalogClient
     @Dependency(\.mealsClient) private var mealsClient
+    @Dependency(\.dietaryProfileClient) private var dietaryProfileClient
+    @Dependency(\.dietaryClient) private var dietaryClient
 
     nonisolated private enum CancelID: Hashable, Sendable {
         case meals
@@ -111,23 +119,68 @@ struct MainTabFeature: Reducer {
         Reduce { state, action in
             switch action {
             case .menuViewAppeared:
-                guard state.catalogUniversities.isEmpty, !state.isCatalogLoading else {
-                    return .none
+                var effects: [Effect<Action>] = []
+
+                if state.catalogUniversities.isEmpty, !state.isCatalogLoading {
+                    state.isCatalogLoading = true
+                    state.catalogErrorMessage = nil
+                    effects.append(
+                        .run { send in
+                            do {
+                                let response = try await catalogClient.fetch("en")
+                                await send(.catalogResponse(.success(response)))
+                            } catch {
+                                await send(
+                                    .catalogResponse(
+                                        .failure(error as? NetworkError ?? .unknownError)
+                                    )
+                                )
+                            }
+                        }
+                    )
                 }
-                state.isCatalogLoading = true
-                state.catalogErrorMessage = nil
-                return .run { send in
-                    do {
-                        let response = try await catalogClient.fetch("en")
-                        await send(.catalogResponse(.success(response)))
-                    } catch {
-                        await send(
-                            .catalogResponse(
-                                .failure(error as? NetworkError ?? .unknownError)
-                            )
-                        )
-                    }
+
+                if state.setting.isAuthenticated,
+                   !state.hasLoadedDietaryFilter,
+                   !state.isDietaryFilterLoading {
+                    state.isDietaryFilterLoading = true
+                    effects.append(
+                        .run { send in
+                            async let profile = dietaryProfileClient.fetch()
+                            async let taxonomy = dietaryClient.fetchTaxonomy()
+                            do {
+                                await send(.dietaryProfileResponse(.success(try await profile)))
+                                await send(.dietaryTaxonomyResponse(.success(try await taxonomy)))
+                            } catch {
+                                let networkError = error as? NetworkError ?? .unknownError
+                                await send(.dietaryProfileResponse(.failure(networkError)))
+                                await send(.dietaryTaxonomyResponse(.failure(networkError)))
+                            }
+                        }
+                    )
                 }
+
+                return .merge(effects)
+
+            case let .dietaryProfileResponse(.success(profile)):
+                state.dietaryProfile = profile
+                state.isDietaryFilterLoading = false
+                state.hasLoadedDietaryFilter = state.dietaryTaxonomy != nil
+                return .none
+
+            case .dietaryProfileResponse(.failure):
+                state.isDietaryFilterLoading = false
+                return .none
+
+            case let .dietaryTaxonomyResponse(.success(taxonomy)):
+                state.dietaryTaxonomy = taxonomy
+                state.isDietaryFilterLoading = false
+                state.hasLoadedDietaryFilter = state.dietaryProfile != nil
+                return .none
+
+            case .dietaryTaxonomyResponse(.failure):
+                state.isDietaryFilterLoading = false
+                return .none
 
             case .catalogRetryTapped:
                 state.catalogUniversities = []
@@ -242,7 +295,10 @@ struct MainTabFeature: Reducer {
             case let .menuSectionTapped(sectionID):
                 guard let detail = MealsPresentation.sheet(
                     for: sectionID,
-                    in: state.mealsResponse
+                    in: state.mealsResponse,
+                    dietaryProfile: state.dietaryProfile,
+                    taxonomy: state.dietaryTaxonomy,
+                    appliesDietaryFilter: state.setting.dietaryPreference.savedShowsOnMenu
                 ) else {
                     return .none
                 }
@@ -309,6 +365,11 @@ struct MainTabFeature: Reducer {
                     menuEffect,
                     .send(.map(.universityChanged(code: code, name: name)))
                 )
+
+            case let .setting(.delegate(.dietaryProfileUpdated(profile))):
+                state.dietaryProfile = profile
+                state.hasLoadedDietaryFilter = state.dietaryTaxonomy != nil
+                return .none
 
             case .setting:
                 return .none

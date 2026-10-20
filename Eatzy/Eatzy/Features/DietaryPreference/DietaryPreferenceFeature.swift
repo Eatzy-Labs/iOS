@@ -16,10 +16,18 @@ struct DietaryPreferenceFeature: Reducer {
         var selectedReligions: Set<String> = []
         var selectedDiets: Set<String> = []
         var selectedRestrictions: Set<String> = []
+        var savedShowsOnMenu = true
+        var savedReligions: Set<String> = []
+        var savedDiets: Set<String> = []
+        var savedRestrictions: Set<String> = []
+        var maxSpiceLevel: Int?
         var isLoading = false
         var isProfileLoading = false
         var hasLoadedDietaryProfile = false
+        var isSaving = false
+        var isDiscardAlertPresented = false
         var errorMessage: String?
+        var saveErrorMessage: String?
 
         init(isAuthenticated: Bool = true) {
             self.isAuthenticated = isAuthenticated
@@ -35,6 +43,13 @@ struct DietaryPreferenceFeature: Reducer {
 
         var restrictionOptions: [IngredientDTO] {
             taxonomy?.ingredients ?? []
+        }
+
+        var hasChanges: Bool {
+            showsOnMenu != savedShowsOnMenu ||
+                selectedReligions != savedReligions ||
+                selectedDiets != savedDiets ||
+                selectedRestrictions != savedRestrictions
         }
 
         func religionName(for code: String) -> String {
@@ -56,11 +71,18 @@ struct DietaryPreferenceFeature: Reducer {
         case dietSelectionChanged(Set<String>)
         case restrictionTapped(String)
         case clearRestrictionsTapped
+        case doneButtonTapped
+        case replaceProfileResponse(Result<DietaryProfileDTO, NetworkError>)
+        case discardAlertPresentationChanged(Bool)
+        case discardChangesButtonTapped
+        case cancelDiscardButtonTapped
+        case saveErrorDismissed
         case backButtonTapped
         case delegate(Delegate)
 
         enum Delegate {
             case backRequested
+            case profileUpdated(DietaryProfileDTO)
         }
     }
 
@@ -143,6 +165,10 @@ struct DietaryPreferenceFeature: Reducer {
                 state.selectedReligions = response.religion.map { [$0] } ?? []
                 state.selectedDiets = Set(response.diets)
                 state.selectedRestrictions = Set(response.avoidedIngredients)
+                state.savedReligions = state.selectedReligions
+                state.savedDiets = state.selectedDiets
+                state.savedRestrictions = state.selectedRestrictions
+                state.maxSpiceLevel = response.maxSpiceLevel
                 return .none
 
             case let .dietaryProfileResponse(.failure(error)):
@@ -177,7 +203,81 @@ struct DietaryPreferenceFeature: Reducer {
                 state.selectedRestrictions = []
                 return .none
 
+            case .doneButtonTapped:
+                guard state.hasChanges, !state.isSaving else { return .none }
+
+                let request = DietaryProfileDTO(
+                    avoidedIngredients: state.selectedRestrictions.sorted(),
+                    diets: state.selectedDiets.sorted(),
+                    maxSpiceLevel: state.maxSpiceLevel,
+                    religion: state.selectedReligions.first
+                )
+
+                if !state.isAuthenticated {
+                    return .send(.replaceProfileResponse(.success(request)))
+                }
+
+                state.isSaving = true
+                state.saveErrorMessage = nil
+                return .run { send in
+                    do {
+                        await send(
+                            .replaceProfileResponse(
+                                .success(try await dietaryProfileClient.replace(request))
+                            )
+                        )
+                    } catch {
+                        await send(
+                            .replaceProfileResponse(
+                                .failure(error as? NetworkError ?? .unknownError)
+                            )
+                        )
+                    }
+                }
+
+            case let .replaceProfileResponse(.success(response)):
+                state.isSaving = false
+                state.saveErrorMessage = nil
+                state.selectedReligions = response.religion.map { [$0] } ?? []
+                state.selectedDiets = Set(response.diets)
+                state.selectedRestrictions = Set(response.avoidedIngredients)
+                state.savedShowsOnMenu = state.showsOnMenu
+                state.savedReligions = state.selectedReligions
+                state.savedDiets = state.selectedDiets
+                state.savedRestrictions = state.selectedRestrictions
+                state.maxSpiceLevel = response.maxSpiceLevel
+                return .send(.delegate(.profileUpdated(response)))
+
+            case let .replaceProfileResponse(.failure(error)):
+                state.isSaving = false
+                state.saveErrorMessage = error.description
+                return .none
+
+            case let .discardAlertPresentationChanged(isPresented):
+                state.isDiscardAlertPresented = isPresented
+                return .none
+
+            case .discardChangesButtonTapped:
+                state.showsOnMenu = state.savedShowsOnMenu
+                state.selectedReligions = state.savedReligions
+                state.selectedDiets = state.savedDiets
+                state.selectedRestrictions = state.savedRestrictions
+                state.isDiscardAlertPresented = false
+                return .send(.delegate(.backRequested))
+
+            case .cancelDiscardButtonTapped:
+                state.isDiscardAlertPresented = false
+                return .none
+
+            case .saveErrorDismissed:
+                state.saveErrorMessage = nil
+                return .none
+
             case .backButtonTapped:
+                guard !state.hasChanges else {
+                    state.isDiscardAlertPresented = true
+                    return .none
+                }
                 return .send(.delegate(.backRequested))
 
             case .delegate:
