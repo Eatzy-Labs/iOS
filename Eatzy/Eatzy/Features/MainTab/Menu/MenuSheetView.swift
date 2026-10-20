@@ -71,9 +71,9 @@ private extension MenuSheetView {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                     }
+                    .padding(.horizontal, 16)
                 }
                 .scrollIndicators(.hidden)
-                .padding(.leading, 16)
             }
         }
     }
