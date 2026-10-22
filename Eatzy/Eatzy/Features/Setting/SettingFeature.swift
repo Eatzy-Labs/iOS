@@ -36,7 +36,12 @@ struct SettingFeature: Reducer {
         var selectedLegalDocumentURL: URL?
         var isLegalDocumentPresented = false
 
-        init(isAuthenticated: Bool, universityCode: String = "") {
+        init(
+            isAuthenticated: Bool,
+            universityCode: String = "",
+            dietaryProfile: DietaryProfileDTO? = nil,
+            dietaryTaxonomy: DietaryTaxonomyResponseDTO? = nil
+        ) {
             self.isAuthenticated = isAuthenticated
 
             var initialProfile = ProfileMockData.profile
@@ -45,7 +50,9 @@ struct SettingFeature: Reducer {
             }
             profile = ProfileFeature.State(profile: initialProfile)
             dietaryPreference = DietaryPreferenceFeature.State(
-                isAuthenticated: isAuthenticated
+                isAuthenticated: isAuthenticated,
+                dietaryProfile: dietaryProfile,
+                taxonomy: dietaryTaxonomy
             )
         }
     }
